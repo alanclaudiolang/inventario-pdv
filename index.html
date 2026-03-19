@@ -7,168 +7,158 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Inventário PDV">
 <title>Inventário PDV</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0a0c0f;--s1:#111318;--s2:#181c23;--border:rgba(255,255,255,0.08);
-  --border2:rgba(255,255,255,0.14);--text:#e8eaf0;--text2:#7b8194;--text3:#4a4f5e;
-  --accent:#00e5a0;--accent2:#00b87d;--warn:#ffb347;--danger:#ff5c5c;--info:#5c9eff;
+  --bg:#0a0c0f;--s1:#111318;--s2:#181c23;--b:rgba(255,255,255,0.08);--b2:rgba(255,255,255,0.14);
+  --text:#e8eaf0;--t2:#7b8194;--t3:#4a4f5e;
+  --green:#00e5a0;--green2:#00b87d;--warn:#ffb347;--red:#ff5c5c;--blue:#5c9eff;
   --r:10px;--r2:14px;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;overflow-x:hidden}
-body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;overflow:hidden}
+body{display:flex;flex-direction:column;height:100dvh}
 
 /* NAV */
-.nav{position:sticky;top:0;z-index:100;background:var(--s1);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;safe-area-inset-top:env(safe-area-inset-top)}
-.nav-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.nav-icon svg{width:16px;height:16px}
-.nav-title{font-size:15px;font-weight:600}
-.nav-sub{font-size:11px;color:var(--text2)}
-.nav-badge{margin-left:auto;font-size:10px;font-family:monospace;background:rgba(0,229,160,0.1);color:var(--accent);padding:3px 8px;border-radius:5px;border:1px solid rgba(0,229,160,0.2)}
+.nav{background:var(--s1);border-bottom:1px solid var(--b);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nav-icon{width:30px;height:30px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-icon svg{width:15px;height:15px}
+.nav-title{font-size:14px;font-weight:600}
+.nav-sub{font-size:10px;color:var(--t2)}
 
 /* SCREENS */
-.screen{display:none;flex:1;flex-direction:column;padding:14px;gap:12px;overflow-y:auto}
+.screen{display:none;flex:1;flex-direction:column;overflow:hidden}
 .screen.active{display:flex}
 
-/* CARDS */
-.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px}
-.card-label{font-size:10px;font-family:monospace;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+/* SCAN SCREEN */
+#scan-screen{position:relative}
+.cam-container{position:relative;flex:1;background:#000;overflow:hidden}
+#video{width:100%;height:100%;object-fit:cover;display:block}
+#overlay-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#scan-canvas{display:none}
+
+/* TOP HUD */
+.hud-top{position:absolute;top:0;left:0;right:0;z-index:20;padding:10px}
+.hud-row{display:flex;gap:6px;align-items:flex-start}
+.hud-pill{background:rgba(0,0,0,0.72);border-radius:20px;padding:5px 10px;font-size:11px;font-family:monospace;color:#fff;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.hud-dot{width:6px;height:6px;border-radius:50%}
+#hud-count{margin-left:auto}
+#hud-status-text{font-size:11px}
+
+/* FEEDBACK BANNER */
+#feedback-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;width:88%;pointer-events:none;display:none}
+.fb-inner{background:rgba(0,0,0,0.82);border-radius:14px;padding:12px 18px;text-align:center;border:1.5px solid rgba(255,255,255,0.15)}
+#fb-icon{font-size:22px;margin-bottom:4px}
+#fb-text{font-size:13px;font-weight:600;color:#fff;line-height:1.4}
+
+/* REVISIT ALERT */
+#revisit-alert{position:absolute;bottom:100px;left:10px;right:10px;z-index:30;display:none}
+.rev-inner{background:rgba(255,179,71,0.15);border:1.5px solid rgba(255,179,71,0.5);border-radius:12px;padding:10px 14px}
+.rev-title{font-size:12px;font-weight:700;color:var(--warn);margin-bottom:4px}
+.rev-zones{font-size:11px;color:rgba(255,255,255,0.8);line-height:1.5}
+
+/* BARCODE FLASH */
+#barcode-flash{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,229,160,0.12);z-index:25;pointer-events:none;display:none;border:2px solid var(--green)}
+
+/* BOTTOM CONTROLS */
+.scan-controls{background:rgba(0,0,0,0.85);padding:10px 14px 14px;flex-shrink:0;z-index:20}
+.scan-ctrl-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.btn-round{width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+.btn-round:active{transform:scale(0.92)}
+.btn-stop{background:var(--red);color:#fff}
+.btn-stop svg{width:18px;height:18px}
+.btn-done{background:var(--green);color:#000}
+.btn-done svg{width:18px;height:18px}
+.btn-flip2{background:var(--s2);border:1px solid var(--b2);color:var(--t2)}
+.btn-flip2 svg{width:16px;height:16px}
+.scan-info{flex:1;text-align:center}
+.scan-info-count{font-size:22px;font-weight:700;color:var(--green);letter-spacing:-1px}
+.scan-info-label{font-size:10px;color:var(--t2);font-family:monospace}
+
+/* PRODUCT LIST DRAWER */
+.drawer{position:absolute;bottom:0;left:0;right:0;z-index:40;background:var(--s1);border-radius:16px 16px 0 0;border-top:1px solid var(--b);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:65vh;display:flex;flex-direction:column}
+.drawer.open{transform:translateY(0)}
+.drawer-handle{width:36px;height:3px;background:var(--b2);border-radius:2px;margin:10px auto 0}
+.drawer-title{padding:10px 16px;font-size:13px;font-weight:600;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.drawer-body{overflow-y:auto;flex:1;padding:8px}
+.prod-item{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:var(--r);border:1px solid var(--b);margin-bottom:6px;background:var(--s2)}
+.prod-thumb{width:36px;height:36px;border-radius:7px;background:var(--s1);border:1px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.prod-info{flex:1;min-width:0}
+.prod-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prod-barcode{font-size:10px;font-family:monospace;color:var(--blue);margin-top:1px}
+.prod-method{font-size:9px;color:var(--t3);margin-top:1px}
+.prod-qty{flex-shrink:0;text-align:right}
+.qty-num{font-size:18px;font-weight:700;font-family:monospace;color:var(--green)}
+.qty-label{font-size:9px;color:var(--t3)}
+.conf-dot{width:6px;height:6px;border-radius:50%;margin-top:3px;margin-left:auto}
+
+/* DRAWER TOGGLE BTN */
+#btn-toggle-drawer{position:absolute;right:14px;bottom:78px;z-index:35;background:var(--green);border:none;color:#000;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;box-shadow:0 2px 12px rgba(0,229,160,0.3)}
+
+/* REPORT SCREEN */
+#report-screen{overflow-y:auto;padding:14px;gap:12px}
+.card{background:var(--s1);border:1px solid var(--b);border-radius:var(--r2);padding:14px}
+.card-label{font-size:10px;font-family:monospace;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.metric{background:var(--s2);border-radius:var(--r);padding:10px}
+.metric-l{font-size:9px;font-family:monospace;color:var(--t3);letter-spacing:.4px;margin-bottom:5px;text-transform:uppercase}
+.metric-v{font-size:22px;font-weight:700;letter-spacing:-1px}
+.g{color:var(--green)}.b{color:var(--blue)}.w{color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{padding:7px 10px;text-align:left;font-size:9px;font-family:monospace;color:var(--t3);font-weight:400;border-bottom:1px solid var(--b);background:var(--s2)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.04)}
+tbody td{padding:8px 10px;vertical-align:middle}
+.btn{padding:11px 16px;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:8px;transition:all .15s}
+.btn-primary{background:var(--green);color:#000}
+.btn-primary:active{background:var(--green2)}
+.btn-ghost{background:transparent;border:1px solid var(--b2);color:var(--t2)}
+.badge{font-size:9px;padding:2px 6px;border-radius:4px;font-family:monospace}
+.badge-bc{background:rgba(92,158,255,0.15);color:var(--blue)}
+.badge-ai{background:rgba(0,229,160,0.12);color:var(--green)}
+.badge-low{background:rgba(255,92,92,0.12);color:var(--red)}
+
+/* START SCREEN */
+#start-screen{align-items:center;justify-content:center;padding:24px;gap:16px;overflow-y:auto}
+.start-icon{width:72px;height:72px;background:var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.start-icon svg{width:36px;height:36px}
+.start-title{font-size:20px;font-weight:700;text-align:center;letter-spacing:-.5px}
+.start-sub{font-size:13px;color:var(--t2);text-align:center;line-height:1.6;max-width:280px}
+.start-card{background:var(--s1);border:1px solid var(--b);border-radius:var(--r2);padding:14px;width:100%}
+.form-row{margin-bottom:10px}
+.form-row label{font-size:11px;color:var(--t2);display:block;margin-bottom:5px}
+.form-row input,.form-row select{width:100%;background:var(--s2);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;outline:none;-webkit-appearance:none}
+.form-row input:focus,.form-row select:focus{border-color:var(--green)}
+
+/* SETTINGS */
+#settings-screen{overflow-y:auto;padding:14px;gap:12px}
+.inp{width:100%;background:var(--s2);border:1px solid var(--b);border-radius:var(--r);color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;outline:none;-webkit-appearance:none}
+.inp:focus{border-color:var(--green)}
+.key-wrap{position:relative}
+.key-wrap .inp{padding-right:70px}
+.key-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--t2);font-size:11px;font-family:monospace;cursor:pointer}
+.status-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--b)}
+.status-row:last-child{border:none}
+.sl{font-size:12px}.ss{font-size:10px;color:var(--t2);margin-top:2px}
+.sbadge{font-size:10px;padding:2px 8px;border-radius:5px;font-family:monospace}
+.ok{background:rgba(0,229,160,0.1);color:var(--green)}.no{background:rgba(255,92,92,0.1);color:var(--red)}
+.sbtn{padding:10px;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border:none;width:100%;background:var(--green);color:#000;margin-top:10px}
+.alert-ok{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--green);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-top:8px;display:none}
+.alert-err{background:rgba(255,92,92,0.08);border:1px solid rgba(255,92,92,0.25);color:var(--red);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-top:8px;display:none}
 
 /* BOTTOM NAV */
-.bottom-nav{background:var(--s1);border-top:1px solid var(--border);display:flex;padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom))}
-.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:none;background:transparent;color:var(--text3);font-size:10px;cursor:pointer;transition:color .15s;font-family:inherit}
+.bnav{background:var(--s1);border-top:1px solid var(--b);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:none;background:transparent;color:var(--t3);font-size:9px;cursor:pointer;font-family:inherit;transition:color .15s}
 .bnav-btn svg{width:20px;height:20px}
-.bnav-btn.active{color:var(--accent)}
-
-/* CAMERA AREA */
-.camera-wrap{position:relative;background:#000;border-radius:var(--r2);overflow:hidden;aspect-ratio:3/4;width:100%}
-#video{width:100%;height:100%;object-fit:cover;display:block}
-.camera-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(0,0,0,0.5)}
-.camera-hint{font-size:13px;color:rgba(255,255,255,0.7);text-align:center;padding:0 20px}
-.corner{position:absolute;width:24px;height:24px;border-color:var(--accent);border-style:solid;border-width:0}
-.corner.tl{top:16px;left:16px;border-top-width:2px;border-left-width:2px}
-.corner.tr{top:16px;right:16px;border-top-width:2px;border-right-width:2px}
-.corner.bl{bottom:16px;left:16px;border-bottom-width:2px;border-left-width:2px}
-.corner.br{bottom:16px;right:16px;border-bottom-width:2px;border-right-width:2px}
-
-/* BUTTONS */
-.btn{padding:13px 20px;border-radius:var(--r);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
-.btn-primary{background:var(--accent);color:#000}
-.btn-primary:active{background:var(--accent2);transform:scale(0.98)}
-.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
-.btn-ghost:active{background:var(--s2)}
-.btn-danger{background:rgba(255,92,92,0.1);color:var(--danger);border:1px solid rgba(255,92,92,0.2)}
-
-/* CAPTURE BTN */
-.capture-row{display:flex;gap:10px;align-items:center;margin-top:4px}
-.btn-capture{width:64px;height:64px;border-radius:50%;background:var(--accent);border:3px solid rgba(255,255,255,0.3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.btn-capture:active{transform:scale(0.93);background:var(--accent2)}
-.btn-capture svg{width:26px;height:26px;color:#000}
-.btn-flip{width:44px;height:44px;border-radius:50%;background:var(--s2);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)}
-.btn-flip svg{width:18px;height:18px}
-
-/* PREVIEW */
-#preview-img{width:100%;border-radius:var(--r2);display:none;border:1px solid var(--border)}
-
-/* FORM */
-.form-row{margin-bottom:12px}
-.form-row label{font-size:12px;color:var(--text2);display:block;margin-bottom:6px}
-.form-row input,.form-row select,.form-row textarea{
-  width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);
-  color:var(--text);font-family:inherit;font-size:14px;padding:11px 13px;outline:none;
-  transition:border-color .15s;-webkit-appearance:none;
-}
-.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent)}
-.form-row textarea{resize:none;height:70px}
-.form-row select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237b8194' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
-
-/* KEY FIELD */
-.key-wrap{position:relative}
-.key-wrap input{padding-right:80px}
-.key-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--text2);font-size:11px;font-family:monospace;cursor:pointer;padding:4px}
-
-/* STATUS */
-.status-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);font-size:12px}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0}
-.status-dot.pulse{background:var(--accent);animation:pulse 1.2s infinite}
-.status-dot.ok{background:var(--accent)}
-.status-dot.err{background:var(--danger)}
-
-/* METRICS */
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.metric{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:12px}
-.metric-label{font-size:9px;font-family:monospace;color:var(--text3);letter-spacing:.4px;margin-bottom:6px;text-transform:uppercase}
-.metric-val{font-size:26px;font-weight:700;letter-spacing:-1px}
-.metric-val.green{color:var(--accent)}
-.metric-val.blue{color:var(--info)}
-.metric-val.warn{color:var(--warn)}
-
-/* TABLE */
-.results-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
-.results-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.results-head h3{font-size:13px;font-weight:500}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead th{padding:8px 12px;text-align:left;font-size:9px;font-family:monospace;color:var(--text3);letter-spacing:.6px;font-weight:400;border-bottom:1px solid var(--border);background:var(--s2);white-space:nowrap}
-tbody tr{border-bottom:1px solid rgba(255,255,255,0.04)}
-tbody td{padding:10px 12px;vertical-align:middle}
-.prod-name{font-weight:500;font-size:12px}
-.prod-sub{font-size:10px;color:var(--text3);margin-top:2px}
-.barcode{font-family:monospace;font-size:10px;color:var(--info)}
-.qty-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:5px;font-weight:700;font-size:12px;font-family:monospace}
-.qty-hi{background:rgba(0,229,160,0.1);color:var(--accent)}
-.qty-md{background:rgba(255,179,71,0.1);color:var(--warn)}
-.qty-lo{background:rgba(255,92,92,0.1);color:var(--danger)}
-.pill{font-size:9px;padding:2px 7px;border-radius:4px;font-family:monospace}
-.pill-ok{background:rgba(0,229,160,0.1);color:var(--accent)}
-.pill-low{background:rgba(255,179,71,0.1);color:var(--warn)}
-
-/* ERROR / SUCCESS */
-.alert{padding:12px 14px;border-radius:var(--r);font-size:13px;line-height:1.5}
-.alert-err{background:rgba(255,92,92,0.08);border:1px solid rgba(255,92,92,0.25);color:var(--danger)}
-.alert-ok{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--accent)}
-
-/* CONF BAR */
-.conf{display:flex;align-items:center;gap:6px}
-.conf-track{flex:1;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;min-width:36px}
-.conf-fill{height:100%;border-radius:2px}
-.conf-pct{font-size:9px;font-family:monospace;color:var(--text2);min-width:24px;text-align:right}
-
-/* EMPTY */
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--text3);text-align:center;gap:10px}
-.empty svg{width:40px;height:40px;opacity:.25}
-.empty p{font-size:13px;line-height:1.6;max-width:220px}
-
-/* SPINNER */
-.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite}
-.spin-white{border-color:rgba(255,255,255,0.2);border-top-color:#fff}
-
-/* JSON panel */
-.json-panel{background:var(--s2);border-radius:var(--r);padding:12px;margin-top:8px}
-.json-panel pre{font-family:monospace;font-size:10px;color:var(--text2);white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;line-height:1.6}
-
-/* EXPORT ROW */
-.export-row{display:flex;gap:8px}
-.export-row .btn{font-size:12px;padding:9px 14px}
-
-/* SETTINGS SPECIFIC */
-.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
-.setting-row:last-child{border-bottom:none}
-.setting-label{font-size:13px}
-.setting-sub{font-size:11px;color:var(--text2);margin-top:2px}
-.badge-ok{background:rgba(0,229,160,0.1);color:var(--accent);padding:3px 8px;border-radius:5px;font-size:11px;font-family:monospace}
-.badge-err{background:rgba(255,92,92,0.1);color:var(--danger);padding:3px 8px;border-radius:5px;font-size:11px;font-family:monospace}
+.bnav-btn.active{color:var(--green)}
 
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.blink{animation:blink 1s infinite}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <div class="nav">
   <div class="nav-icon">
     <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5">
@@ -176,267 +166,212 @@ tbody td{padding:10px 12px;vertical-align:middle}
       <path d="M8 21h8M12 17v4M7 8h.01M11 8h6M7 12h.01M11 12h3"/>
     </svg>
   </div>
-  <div>
-    <div class="nav-title">Inventário PDV</div>
-    <div class="nav-sub">Reconhecimento visual · IA</div>
-  </div>
-  <div class="nav-badge">v1.0</div>
+  <div><div class="nav-title">Inventário PDV</div><div class="nav-sub">Reconhecimento em tempo real</div></div>
+  <div style="margin-left:auto;font-size:9px;font-family:monospace;background:rgba(0,229,160,0.1);color:var(--green);padding:2px 7px;border-radius:4px;border:1px solid rgba(0,229,160,0.2)">v2.0</div>
 </div>
 
-<!-- SCREEN: CÂMERA -->
-<div class="screen active" id="screen-camera">
-
-  <div class="card">
-    <div class="card-label">📷 Captura</div>
-    <div class="camera-wrap" id="camera-wrap">
-      <video id="video" autoplay playsinline muted></video>
-      <canvas id="overlay-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none"></canvas>
-      <div class="corner tl"></div><div class="corner tr"></div>
-      <div class="corner bl"></div><div class="corner br"></div>
-      <div id="quality-bar" style="display:none;position:absolute;top:10px;left:10px;right:10px;z-index:10">
-        <div style="background:rgba(0,0,0,0.65);border-radius:10px;padding:8px 12px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <span style="font-size:10px;color:rgba(255,255,255,0.7);font-family:monospace;letter-spacing:.5px">ENQUADRAMENTO</span>
-            <span id="score-pct" style="font-size:13px;font-weight:700;font-family:monospace;color:#00e5a0">—</span>
-          </div>
-          <div style="height:4px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden">
-            <div id="score-bar" style="height:100%;width:0%;border-radius:2px;transition:width .4s,background .4s;background:#00e5a0"></div>
-          </div>
-        </div>
-      </div>
-      <div id="ind-row" style="display:none;position:absolute;bottom:76px;left:8px;right:8px;z-index:10">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-          <div id="ind-light" style="background:rgba(0,0,0,0.6);border-radius:7px;padding:5px 8px;font-size:11px;font-family:monospace;color:#fff;display:flex;align-items:center;gap:5px"><span id="il-dot" style="width:7px;height:7px;border-radius:50%;background:#4a4f5e;flex-shrink:0"></span><span id="il-txt">Luz —</span></div>
-          <div id="ind-focus" style="background:rgba(0,0,0,0.6);border-radius:7px;padding:5px 8px;font-size:11px;font-family:monospace;color:#fff;display:flex;align-items:center;gap:5px"><span id="if-dot" style="width:7px;height:7px;border-radius:50%;background:#4a4f5e;flex-shrink:0"></span><span id="if-txt">Foco —</span></div>
-          <div id="ind-dist" style="background:rgba(0,0,0,0.6);border-radius:7px;padding:5px 8px;font-size:11px;font-family:monospace;color:#fff;display:flex;align-items:center;gap:5px"><span id="id-dot" style="width:7px;height:7px;border-radius:50%;background:#4a4f5e;flex-shrink:0"></span><span id="id-txt">Distância —</span></div>
-          <div id="ind-angle" style="background:rgba(0,0,0,0.6);border-radius:7px;padding:5px 8px;font-size:11px;font-family:monospace;color:#fff;display:flex;align-items:center;gap:5px"><span id="ia-dot" style="width:7px;height:7px;border-radius:50%;background:#4a4f5e;flex-shrink:0"></span><span id="ia-txt">Ângulo —</span></div>
-        </div>
-      </div>
-      <div id="feedback-msg" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;width:90%">
-        <div style="background:rgba(0,0,0,0.72);border-radius:12px;padding:10px 16px;text-align:center;border:1.5px solid rgba(255,255,255,0.12)">
-          <div id="feedback-text" style="font-size:14px;font-weight:600;color:#fff"></div>
-        </div>
-      </div>
-      <div class="camera-overlay" id="cam-overlay">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
-        </svg>
-        <div class="camera-hint">Toque em "Abrir câmera" para iniciar</div>
-      </div>
-    </div>
-    <canvas id="canvas" style="display:none"></canvas>
-    <img id="preview-img" alt="preview">
-
-    <div class="capture-row" style="margin-top:12px;justify-content:center" id="cam-controls" style="display:none">
-      <button class="btn-flip" id="btn-flip" title="Virar câmera">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M1 4v6h6M23 20v-6h-6"/>
-          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-        </svg>
-      </button>
-      <button class="btn-capture" id="btn-capture">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.3)"/>
-          <circle cx="12" cy="12" r="6" fill="currentColor"/>
-        </svg>
-      </button>
-      <div style="width:44px"></div>
-    </div>
-  </div>
-
-  <div id="cam-action-row">
-    <button class="btn btn-primary" id="btn-open-cam">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
-      </svg>
-      Abrir câmera
-    </button>
-  </div>
-
-  <div id="or-divider" style="display:none;text-align:center;font-size:12px;color:var(--text3)">— ou selecionar da galeria —</div>
-  <input type="file" id="file-input" accept="image/*" style="display:none">
-  <button class="btn btn-ghost" id="btn-gallery" style="display:none">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-      <polyline points="21 15 16 10 5 21"/>
+<!-- START SCREEN -->
+<div class="screen active" id="start-screen">
+  <div class="start-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
     </svg>
-    Escolher da galeria
-  </button>
-
-  <div id="analyze-section" style="display:none">
+  </div>
+  <div class="start-title">Novo Inventário</div>
+  <div class="start-sub">Filme as prateleiras devagar. O app detecta produtos e barcodes em tempo real.</div>
+  <div class="start-card">
     <div class="form-row">
-      <label>Código do PDV (opcional)</label>
-      <input type="text" id="pdv-id" placeholder="Ex: PDV-001">
+      <label>Código do PDV</label>
+      <input id="start-pdv" type="text" placeholder="Ex: PDV-001 · Loja Centro">
     </div>
     <div class="form-row">
       <label>Categoria</label>
-      <select id="category">
+      <select id="start-cat">
         <option value="">Geral</option>
         <option value="beverages">Bebidas</option>
-        <option value="snacks">Snacks</option>
+        <option value="snacks">Snacks / Salgadinhos</option>
         <option value="chocolates">Chocolates / Doces</option>
         <option value="cigarettes">Cigarros</option>
         <option value="personal_care">Higiene / Beleza</option>
       </select>
     </div>
-    <button class="btn btn-primary" id="btn-analyze" style="margin-top:4px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      Analisar estoque
-    </button>
-    <button class="btn btn-ghost" id="btn-retake" style="margin-top:8px">Tirar outra foto</button>
   </div>
-
-  <div id="loading-section" style="display:none">
-    <div class="status-bar">
-      <div class="status-dot pulse"></div>
-      <span id="loading-msg" style="color:var(--text2)">Analisando imagem...</span>
-    </div>
-  </div>
-
-  <div id="error-section" style="display:none" class="alert alert-err"></div>
-
+  <button class="btn btn-primary" id="btn-start-scan" style="margin-top:4px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+    </svg>
+    Iniciar Varredura
+  </button>
+  <div id="no-key-warn" class="alert-err" style="display:none">Configure sua API Key em ⚙ Configurações primeiro.</div>
 </div>
 
-<!-- SCREEN: RESULTADOS -->
-<div class="screen" id="screen-results">
+<!-- SCAN SCREEN -->
+<div class="screen" id="scan-screen">
+  <div class="cam-container">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay-canvas"></canvas>
+    <canvas id="scan-canvas"></canvas>
 
-  <div class="status-bar" id="res-status">
-    <div class="status-dot ok"></div>
-    <span id="res-status-text" style="color:var(--text2)">Análise concluída</span>
-    <span id="res-time" style="font-family:monospace;font-size:10px;color:var(--text3);margin-left:auto"></span>
-  </div>
-
-  <div class="metrics">
-    <div class="metric"><div class="metric-label">Produtos</div><div class="metric-val green" id="m-prod">0</div></div>
-    <div class="metric"><div class="metric-label">Unidades</div><div class="metric-val blue" id="m-units">0</div></div>
-    <div class="metric"><div class="metric-label">Baixo Est.</div><div class="metric-val warn" id="m-low">0</div></div>
-  </div>
-
-  <div class="results-card">
-    <div class="results-head">
-      <h3>Itens identificados</h3>
+    <!-- TOP HUD -->
+    <div class="hud-top">
+      <div class="hud-row">
+        <div class="hud-pill">
+          <div class="hud-dot blink" id="hud-dot" style="background:var(--red)"></div>
+          <span id="hud-status-text">Iniciando...</span>
+        </div>
+        <div class="hud-pill" id="hud-count">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
+          <span id="hud-count-num" style="color:var(--green);font-weight:700">0</span> itens
+        </div>
+      </div>
     </div>
-    <div class="tbl-wrap">
+
+    <!-- FEEDBACK CENTRAL -->
+    <div id="feedback-banner">
+      <div class="fb-inner">
+        <div id="fb-icon">📷</div>
+        <div id="fb-text">Aponte para a prateleira</div>
+      </div>
+    </div>
+
+    <!-- REVISIT ALERT -->
+    <div id="revisit-alert">
+      <div class="rev-inner">
+        <div class="rev-title">⚠ Revisitar áreas</div>
+        <div id="rev-zones" class="rev-zones"></div>
+      </div>
+    </div>
+
+    <!-- BARCODE FLASH -->
+    <div id="barcode-flash"></div>
+
+    <!-- TOGGLE DRAWER -->
+    <button id="btn-toggle-drawer" style="display:none">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+      <span id="drawer-count-badge">0 produtos</span>
+    </button>
+
+    <!-- PRODUCT DRAWER -->
+    <div id="product-drawer" class="drawer">
+      <div class="drawer-handle"></div>
+      <div class="drawer-title">
+        <span>Produtos detectados</span>
+        <button onclick="toggleDrawer()" style="background:transparent;border:none;color:var(--t2);font-size:18px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <div class="drawer-body" id="drawer-body"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CONTROLS -->
+  <div class="scan-controls">
+    <div class="scan-ctrl-row">
+      <button class="btn-round btn-flip2" id="btn-flip-cam">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 4v6h6M23 20v-6h-6"/>
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+        </svg>
+      </button>
+      <div class="scan-info">
+        <div class="scan-info-count" id="scan-count">0</div>
+        <div class="scan-info-label">PRODUTOS IDENTIFICADOS</div>
+      </div>
+      <button class="btn-round btn-done" id="btn-finish-scan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT SCREEN -->
+<div class="screen" id="report-screen">
+  <div class="card">
+    <div class="card-label">📋 Resumo do inventário</div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-l">Produtos</div><div class="metric-v g" id="r-prod">0</div></div>
+      <div class="metric"><div class="metric-l">Unidades</div><div class="metric-v b" id="r-units">0</div></div>
+      <div class="metric"><div class="metric-l">Baixo Est.</div><div class="metric-v w" id="r-low">0</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--t2);margin-bottom:4px" id="r-pdv"></div>
+    <div style="font-size:10px;font-family:monospace;color:var(--t3)" id="r-time"></div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:12px 14px;border-bottom:1px solid var(--b);font-size:12px;font-weight:500">Itens identificados</div>
+    <div style="overflow-x:auto">
       <table>
         <thead><tr>
-          <th>PRODUTO</th><th>BARCODE</th><th>QTD</th><th>CONF</th><th>ST</th>
+          <th>PRODUTO</th><th>BARCODE</th><th>QTD</th><th>MÉTODO</th><th>CONF</th>
         </tr></thead>
-        <tbody id="table-body"></tbody>
+        <tbody id="report-tbody"></tbody>
       </table>
     </div>
   </div>
 
-  <div id="observations-card" class="card" style="display:none">
-    <div class="card-label">Observações da IA</div>
-    <p id="observations-text" style="font-size:13px;color:var(--text2);line-height:1.6"></p>
+  <div id="ai-observations" class="card" style="display:none">
+    <div class="card-label">💬 Observações da IA</div>
+    <p id="ai-obs-text" style="font-size:12px;color:var(--t2);line-height:1.6"></p>
   </div>
 
-  <div class="export-row">
-    <button class="btn btn-ghost" id="btn-export-csv" style="flex:1">Exportar CSV</button>
-    <button class="btn btn-ghost" id="btn-copy-json" style="flex:1">Copiar JSON</button>
-  </div>
-
-  <button class="btn btn-primary" id="btn-new-scan">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-      <circle cx="12" cy="13" r="4"/>
-    </svg>
-    Nova análise
+  <button class="btn btn-ghost" id="btn-export-csv">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Exportar CSV
   </button>
-
+  <button class="btn btn-primary" id="btn-new-inventory">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Novo inventário
+  </button>
 </div>
 
-<!-- SCREEN: HISTÓRICO -->
-<div class="screen" id="screen-history">
-  <div class="card">
-    <div class="card-label">📋 Histórico de análises</div>
-    <div id="history-list">
-      <div class="empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        <p>Nenhuma análise ainda. Faça sua primeira captura!</p>
-      </div>
-    </div>
-  </div>
-  <button class="btn btn-danger" id="btn-clear-history" style="display:none">Limpar histórico</button>
-</div>
-
-<!-- SCREEN: CONFIGURAÇÕES -->
-<div class="screen" id="screen-settings">
-
-  <div class="card">
+<!-- SETTINGS SCREEN -->
+<div class="screen" id="settings-screen">
+  <div class="card" style="margin-bottom:0">
     <div class="card-label">🔑 API Key Anthropic</div>
-    <div class="form-row">
-      <label>Sua chave de API</label>
-      <div class="key-wrap">
-        <input type="password" id="api-key-input" placeholder="sk-ant-api03-...">
-        <button class="key-toggle" id="key-toggle-btn" onclick="toggleKey()">mostrar</button>
-      </div>
+    <div class="key-wrap" style="margin-bottom:8px">
+      <input class="inp" type="password" id="api-key-inp" placeholder="sk-ant-api03-...">
+      <button class="key-btn" onclick="toggleKeyVis()">mostrar</button>
     </div>
-    <p style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:14px">
-      Sua chave é salva localmente no dispositivo (localStorage). Nunca é enviada a terceiros — apenas usada diretamente na API da Anthropic.
-    </p>
-    <button class="btn btn-primary" id="btn-save-key">Salvar chave</button>
-    <div id="key-status" style="margin-top:10px;display:none"></div>
+    <p style="font-size:10px;color:var(--t3);line-height:1.5;margin-bottom:10px">Salva localmente no dispositivo. Nunca enviada a terceiros.</p>
+    <button class="sbtn" id="btn-save-key">Salvar chave</button>
+    <div class="alert-ok" id="key-ok">✓ Chave salva!</div>
+    <div class="alert-err" id="key-err">Chave inválida. Use sk-ant-...</div>
   </div>
-
-  <div class="card">
-    <div class="card-label">ℹ Status do app</div>
-    <div class="setting-row">
-      <div><div class="setting-label">API Key</div><div class="setting-sub">Chave Anthropic configurada</div></div>
-      <span id="key-badge" class="badge-err">não configurada</span>
+  <div class="card" style="margin-top:12px">
+    <div class="card-label">ℹ Status</div>
+    <div class="status-row">
+      <div><div class="sl">API Key</div><div class="ss">Anthropic</div></div>
+      <span class="sbadge no" id="key-badge">não configurada</span>
     </div>
-    <div class="setting-row">
-      <div><div class="setting-label">Modelo</div><div class="setting-sub">Versão utilizada</div></div>
-      <span class="badge-ok">claude-sonnet-4</span>
+    <div class="status-row">
+      <div><div class="sl">Modelo</div><div class="ss">Vision AI</div></div>
+      <span class="sbadge ok">claude-sonnet-4</span>
     </div>
-    <div class="setting-row">
-      <div><div class="setting-label">Câmera</div><div class="setting-sub">Acesso ao hardware</div></div>
-      <span id="cam-badge" class="badge-err">não testada</span>
+    <div class="status-row">
+      <div><div class="sl">Barcode</div><div class="ss">Detecção local</div></div>
+      <span class="sbadge ok" id="bc-badge">ZXing</span>
     </div>
-  </div>
-
-  <div class="card">
-    <div class="card-label">📲 Instalar como app</div>
-    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px">
-      No Chrome Android: toque nos <strong>3 pontos</strong> do menu → <strong>"Adicionar à tela inicial"</strong>.<br><br>
-      O app será instalado sem precisar da Play Store.
-    </p>
-    <div id="install-btn-wrap">
-      <button class="btn btn-primary" id="btn-install" style="display:none">Instalar app</button>
+    <div class="status-row">
+      <div><div class="sl">Custo estimado</div><div class="ss">Por inventário completo</div></div>
+      <span class="sbadge ok">~$0,05</span>
     </div>
   </div>
-
 </div>
 
 <!-- BOTTOM NAV -->
-<div class="bottom-nav">
-  <button class="bnav-btn active" data-screen="camera" onclick="goScreen('camera',this)">
+<div class="bnav" id="main-bnav">
+  <button class="bnav-btn active" onclick="goScreen('start',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
     </svg>
-    Câmera
+    Início
   </button>
-  <button class="bnav-btn" data-screen="results" onclick="goScreen('results',this)" id="bnav-results" style="display:none">
+  <button class="bnav-btn" onclick="goScreen('report',this)" id="bnav-report" style="display:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4M7 8h.01M11 8h6M7 12h.01M11 12h3"/>
+      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
     </svg>
-    Resultado
+    Relatório
   </button>
-  <button class="bnav-btn" data-screen="history" onclick="goScreen('history',this)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-    </svg>
-    Histórico
-  </button>
-  <button class="bnav-btn" data-screen="settings" onclick="goScreen('settings',this)">
+  <button class="bnav-btn" onclick="goScreen('settings',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="12" r="3"/>
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -445,39 +380,74 @@ tbody td{padding:10px 12px;vertical-align:middle}
   </button>
 </div>
 
+<!-- ZXing barcode library -->
+<script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+
 <script>
-// ── STATE ──────────────────────────────────────────────
+'use strict';
+
+// ── GLOBALS ───────────────────────────────────────────
 let stream = null;
 let facingMode = 'environment';
-let capturedBase64 = null;
-let inventoryData = null;
-let deferredInstall = null;
+let scanning = false;
+let products = {};        // key = barcode || normalized_name
+let aiCallInterval = null;
+let barcodeInterval = null;
+let overlayInterval = null;
+let lastAiCall = 0;
+let sessionPdv = '';
+let sessionCat = '';
+let sessionStart = null;
+let framesSinceLastProduct = 0;
+let revisitZones = [];
+let drawerOpen = false;
+let zxingReader = null;
+let aiCallCount = 0;
+let pendingAiCall = false;
 
-const SYSTEM_PROMPT = `Você é um agente de inventário de PDV. Analise a imagem e retorne APENAS JSON puro, sem texto extra, sem markdown, sem backticks.
+const AI_INTERVAL_MS = 5000;   // call AI every 5s
+const BC_INTERVAL_MS = 300;    // scan barcode every 300ms
+const LOW_STOCK_THRESHOLD = 3;
 
-Estrutura obrigatória:
-{"pdv":null,"timestamp":"2024-01-01T00:00:00Z","summary":{"total_products":1,"total_units":1,"low_stock_count":0},"items":[{"name":"Nome","brand":"Marca","barcode":null,"quantity":1,"shelf_position":"prateleira 1","confidence":0.9,"low_stock":false,"notes":null}],"observations":"texto"}
-
-Regras: comece com { e termine com }. Conte todas as unidades. Agrupe por SKU. barcode=null se não legível.`;
-
-// ── SCREENS ────────────────────────────────────────────
+// ── SCREEN NAVIGATION ─────────────────────────────────
 function goScreen(name, btn) {
+  const scanActive = document.getElementById('scan-screen').classList.contains('active');
+  if (scanActive && name !== 'scan') stopScan();
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('screen-' + name).classList.add('active');
+  document.getElementById(name + '-screen').classList.add('active');
   if (btn) btn.classList.add('active');
+
+  if (name === 'report') renderReport();
 }
 
-// ── CAMERA ────────────────────────────────────────────
-document.getElementById('btn-open-cam').addEventListener('click', openCamera);
-document.getElementById('btn-capture').addEventListener('click', capture);
-document.getElementById('btn-flip').addEventListener('click', flipCamera);
-document.getElementById('btn-gallery').addEventListener('click', () => document.getElementById('file-input').click());
-document.getElementById('file-input').addEventListener('change', e => { if(e.target.files[0]) loadFile(e.target.files[0]); });
+// ── INIT SCAN ─────────────────────────────────────────
+document.getElementById('btn-start-scan').addEventListener('click', () => {
+  const apiKey = localStorage.getItem('anthropic_api_key');
+  if (!apiKey) {
+    document.getElementById('no-key-warn').style.display = 'block';
+    return;
+  }
+  document.getElementById('no-key-warn').style.display = 'none';
+  sessionPdv = document.getElementById('start-pdv').value.trim();
+  sessionCat = document.getElementById('start-cat').value;
+  sessionStart = new Date();
+  products = {};
+  revisitZones = [];
+  aiCallCount = 0;
+  startScan();
+});
 
-async function openCamera() {
+async function startScan() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('scan-screen').classList.add('active');
+  document.getElementById('main-bnav').style.display = 'none';
+  scanning = true;
+  framesSinceLastProduct = 0;
+
   try {
-    if (stream) { stream.getTracks().forEach(t => t.stop()); }
+    if (stream) stream.getTracks().forEach(t => t.stop());
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
       audio: false
@@ -485,112 +455,210 @@ async function openCamera() {
     const video = document.getElementById('video');
     video.srcObject = stream;
     await video.play();
-    document.getElementById('cam-overlay').style.display = 'none';
-    document.getElementById('cam-controls').style.display = 'flex';
-    document.getElementById('btn-open-cam').style.display = 'none';
-    document.getElementById('or-divider').style.display = 'block';
-    document.getElementById('btn-gallery').style.display = 'flex';
-    document.getElementById('cam-badge').textContent = 'ok';
-    document.getElementById('cam-badge').className = 'badge-ok';
-    startOverlayAnalysis();
+
+    setHudStatus('Varredura ativa', 'green');
+    showFeedback('📦', 'Aponte para os produtos e filme devagar');
+    setTimeout(() => hideFeedback(), 3000);
+
+    startBarcodeDetection();
+    startAiDetection();
+    startOverlayDraw();
+
+    document.getElementById('btn-toggle-drawer').style.display = 'flex';
+
   } catch(e) {
-    showError('Erro ao acessar câmera: ' + e.message + '. Use "Galeria" para selecionar uma foto.');
-    document.getElementById('btn-gallery').style.display = 'flex';
-    document.getElementById('or-divider').style.display = 'block';
-    document.getElementById('btn-open-cam').style.display = 'none';
+    showFeedback('❌', 'Erro na câmera: ' + e.message);
   }
 }
 
-async function flipCamera() {
-  facingMode = facingMode === 'environment' ? 'user' : 'environment';
-  await openCamera();
-}
-
-function capture() {
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const W = video.videoWidth, H = video.videoHeight;
-  const MAX = 1024;
-  let w = W, h = H;
-  if (w > MAX || h > MAX) {
-    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-    else { w = Math.round(w * MAX / h); h = MAX; }
-  }
-  canvas.width = w; canvas.height = h;
-  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  capturedBase64 = dataUrl.split(',')[1];
-  showPreview(dataUrl);
-  stopOverlayAnalysis();
-  // stop stream
+function stopScan() {
+  scanning = false;
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  if (aiCallInterval) { clearInterval(aiCallInterval); aiCallInterval = null; }
+  if (barcodeInterval) { clearInterval(barcodeInterval); barcodeInterval = null; }
+  if (overlayInterval) { clearInterval(overlayInterval); overlayInterval = null; }
+  if (zxingReader) { try { zxingReader.reset(); } catch(e) {} }
+  document.getElementById('main-bnav').style.display = 'flex';
+  document.getElementById('product-drawer').classList.remove('open');
+  document.getElementById('btn-toggle-drawer').style.display = 'none';
 }
 
-function loadFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      const MAX = 1024; let w = img.width, h = img.height;
-      if (w > MAX || h > MAX) { if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
-      const canvas = document.getElementById('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      capturedBase64 = dataUrl.split(',')[1];
-      showPreview(dataUrl);
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function showPreview(dataUrl) {
-  const video = document.getElementById('video');
-  video.style.display = 'none';
-  const prev = document.getElementById('preview-img');
-  prev.src = dataUrl; prev.style.display = 'block';
-  document.getElementById('cam-controls').style.display = 'none';
-  document.getElementById('cam-action-row').style.display = 'none';
-  document.getElementById('or-divider').style.display = 'none';
-  document.getElementById('btn-gallery').style.display = 'none';
-  document.getElementById('analyze-section').style.display = 'block';
-  document.getElementById('cam-overlay').style.display = 'none';
-  hideError();
-}
-
-document.getElementById('btn-retake').addEventListener('click', () => {
-  capturedBase64 = null;
-  document.getElementById('preview-img').style.display = 'none';
-  document.getElementById('video').style.display = 'block';
-  document.getElementById('analyze-section').style.display = 'none';
-  document.getElementById('cam-action-row').style.display = 'block';
-  document.getElementById('cam-overlay').style.display = 'flex';
-  document.getElementById('cam-controls').style.display = 'none';
-  hideError();
-  if (stream) startOverlayAnalysis();
+document.getElementById('btn-finish-scan').addEventListener('click', () => {
+  stopScan();
+  document.getElementById('bnav-report').style.display = 'flex';
+  goScreen('report', null);
+  const reportBtn = document.querySelector('.bnav-btn[onclick*="report"]');
+  if (reportBtn) reportBtn.classList.add('active');
+  document.querySelector('.bnav-btn[onclick*="start"]').classList.remove('active');
 });
 
-// ── ANALYZE ───────────────────────────────────────────
-document.getElementById('btn-analyze').addEventListener('click', analyze);
+document.getElementById('btn-flip-cam').addEventListener('click', async () => {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  if (stream) { stream.getTracks().forEach(t => t.stop()); }
+  stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+    audio: false
+  });
+  document.getElementById('video').srcObject = stream;
+  await document.getElementById('video').play();
+});
 
-async function analyze() {
-  const apiKey = localStorage.getItem('anthropic_api_key');
-  if (!apiKey) {
-    showError('Configure sua API Key nas ⚙ Configurações primeiro.');
+// ── BARCODE DETECTION (ZXing) ─────────────────────────
+function startBarcodeDetection() {
+  if (!window.ZXing) { console.warn('ZXing not loaded'); return; }
+
+  try {
+    zxingReader = new ZXing.BrowserMultiFormatReader();
+  } catch(e) {
+    console.warn('ZXing init failed:', e);
     return;
   }
-  if (!capturedBase64) { showError('Capture uma imagem primeiro.'); return; }
 
-  document.getElementById('analyze-section').style.display = 'none';
-  document.getElementById('loading-section').style.display = 'block';
-  hideError();
+  const video = document.getElementById('video');
+  const scanCanvas = document.getElementById('scan-canvas');
+  const ctx = scanCanvas.getContext('2d');
 
-  const pdvId = document.getElementById('pdv-id').value.trim();
-  const cat = document.getElementById('category').value;
-  const ctx = [pdvId && `PDV: ${pdvId}`, cat && `Categoria: ${cat}`].filter(Boolean).join('. ');
+  barcodeInterval = setInterval(() => {
+    if (!scanning || !video.videoWidth) return;
+    scanCanvas.width = video.videoWidth;
+    scanCanvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
 
-  setLoadingMsg('Enviando imagem para análise...');
+    try {
+      const imageData = ctx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+      const luminanceSource = new ZXing.HTMLCanvasElementLuminanceSource(scanCanvas);
+      const binaryBitmap = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminanceSource));
+      const result = zxingReader.decodeBitmap(binaryBitmap);
+      if (result) onBarcodeDetected(result.getText());
+    } catch(e) {
+      // no barcode in frame — normal
+    }
+  }, BC_INTERVAL_MS);
+}
+
+function onBarcodeDetected(barcode) {
+  if (!barcode || barcode.length < 6) return;
+  const key = 'bc_' + barcode;
+
+  if (products[key]) {
+    // já existe — incrementa se passou tempo suficiente
+    const now = Date.now();
+    if (now - (products[key].lastSeen || 0) > 3000) {
+      products[key].quantity += 1;
+      products[key].lastSeen = now;
+      products[key].confidence = Math.min(1, products[key].confidence + 0.05);
+      updateUI();
+    }
+    products[key].lastSeen = Date.now();
+    return;
+  }
+
+  // novo produto por barcode
+  products[key] = {
+    id: key,
+    barcode,
+    name: 'Produto ' + barcode.slice(-4),
+    brand: '',
+    quantity: 1,
+    confidence: 0.85,
+    method: 'barcode',
+    lowStock: false,
+    firstSeen: Date.now(),
+    lastSeen: Date.now(),
+    shelf: '',
+    needsBarcode: false
+  };
+
+  flashBarcode();
+  showFeedback('✅', `Barcode: ${barcode}`);
+  setTimeout(hideFeedback, 1500);
+  updateUI();
+
+  // ask AI to identify this product by barcode
+  identifyByBarcode(barcode, key);
+}
+
+async function identifyByBarcode(barcode, key) {
+  const apiKey = localStorage.getItem('anthropic_api_key');
+  if (!apiKey) return;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{
+          role: 'user',
+          content: `Qual produto tem o código de barras EAN ${barcode}? Responda APENAS JSON: {"name":"nome do produto","brand":"marca"} — se não souber, use {"name":"Produto ${barcode.slice(-4)}","brand":""}`
+        }]
+      })
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (m) {
+      const parsed = JSON.parse(m[0]);
+      if (products[key]) {
+        products[key].name = parsed.name || products[key].name;
+        products[key].brand = parsed.brand || '';
+        updateUI();
+      }
+    }
+  } catch(e) {}
+}
+
+// ── AI VISION DETECTION ───────────────────────────────
+function startAiDetection() {
+  aiCallInterval = setInterval(runAiScan, AI_INTERVAL_MS);
+  setTimeout(runAiScan, 1500); // first call soon
+}
+
+async function runAiScan() {
+  if (!scanning || pendingAiCall) return;
+  const apiKey = localStorage.getItem('anthropic_api_key');
+  if (!apiKey) return;
+
+  const video = document.getElementById('video');
+  if (!video.videoWidth) return;
+
+  // capture frame
+  const canvas = document.getElementById('scan-canvas');
+  canvas.width = 800;
+  canvas.height = Math.round(800 * video.videoHeight / video.videoWidth);
+  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+  const b64 = canvas.toDataURL('image/jpeg', 0.82).split(',')[1];
+
+  pendingAiCall = true;
+  aiCallCount++;
+  setHudStatus(`IA analisando... (${aiCallCount}ª varredura)`, 'yellow');
+
+  const existingList = Object.values(products).map(p =>
+    `${p.name}${p.barcode ? ' ['+p.barcode+']' : ''}`
+  ).join(', ') || 'nenhum ainda';
+
+  const catHint = sessionCat ? `Categoria esperada: ${sessionCat}.` : '';
+  const systemPrompt = `Você é um agente de inventário de PDV analisando frames de vídeo em tempo real.
+
+Produtos já identificados nesta sessão: ${existingList}
+
+Regras CRÍTICAS:
+1. NÃO repita produtos já listados acima, a menos que veja quantidade ADICIONAL claramente diferente
+2. Identifique APENAS produtos claramente visíveis neste frame
+3. Para cada produto novo, indique se o barcode está visível ou não
+4. Se um produto não tem barcode visível, marque needsBarcode=true
+5. Retorne APENAS JSON puro sem texto extra
+
+${catHint}
+
+JSON obrigatório:
+{"items":[{"name":"Nome","brand":"Marca","barcode":"EAN ou null","quantity":1,"shelf":"prateleira X","confidence":0.85,"needsBarcode":false,"isNew":true}],"revisitZones":["zona a revisitar"],"observations":"texto curto"}`;
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -603,423 +671,314 @@ async function analyze() {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        system: SYSTEM_PROMPT + (ctx ? `\nContexto: ${ctx}` : ''),
+        max_tokens: 1000,
+        system: systemPrompt,
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: capturedBase64 } },
-            { type: 'text', text: 'Retorne apenas o JSON do inventário.' }
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } },
+            { type: 'text', text: 'Identifique produtos novos neste frame. Retorne JSON.' }
           ]
         }]
       })
     });
 
-    setLoadingMsg('Processando resposta...');
-
     if (!resp.ok) {
-      const e = await resp.json().catch(() => ({}));
-      throw new Error(e.error?.message || `HTTP ${resp.status}`);
+      const err = await resp.json().catch(() => ({}));
+      setHudStatus('Erro API: ' + (err.error?.message || resp.status), 'red');
+      pendingAiCall = false;
+      return;
     }
 
     const data = await resp.json();
     const raw = data.content.map(b => b.text || '').join('');
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) { pendingAiCall = false; setHudStatus('Varredura ativa', 'green'); return; }
 
-    let parsed = null;
-    for (const fn of [
-      () => JSON.parse(raw.trim()),
-      () => JSON.parse(raw.replace(/```[\w]*/g,'').replace(/```/g,'').trim()),
-      () => { const m = raw.match(/\{[\s\S]*\}/); if (!m) throw 0; return JSON.parse(m[0]); }
-    ]) { try { parsed = fn(); break; } catch {} }
+    const parsed = JSON.parse(m[0]);
+    let newCount = 0;
 
-    if (!parsed || !Array.isArray(parsed.items)) throw new Error('Resposta inválida da IA. Tente novamente.');
+    (parsed.items || []).forEach(item => {
+      if (!item.name || !item.isNew) return;
+      const key = item.barcode ? 'bc_' + item.barcode : 'ai_' + normalizeKey(item.name);
 
-    inventoryData = parsed;
-    saveHistory(parsed, pdvId);
-    renderResults(parsed);
+      if (products[key]) {
+        // update quantity if confidence is high
+        if (item.confidence >= 0.8) {
+          products[key].quantity = Math.max(products[key].quantity, item.quantity || 1);
+          products[key].confidence = Math.max(products[key].confidence, item.confidence);
+          if (item.barcode && !products[key].barcode) products[key].barcode = item.barcode;
+        }
+        return;
+      }
 
-    document.getElementById('loading-section').style.display = 'none';
-    document.getElementById('bnav-results').style.display = 'flex';
-    goScreen('results', document.querySelector('[data-screen="results"]'));
+      // new product
+      products[key] = {
+        id: key,
+        barcode: item.barcode || null,
+        name: item.name,
+        brand: item.brand || '',
+        quantity: item.quantity || 1,
+        confidence: item.confidence || 0.75,
+        method: item.barcode ? 'barcode+ai' : 'ai',
+        lowStock: (item.quantity || 1) <= LOW_STOCK_THRESHOLD,
+        firstSeen: Date.now(),
+        lastSeen: Date.now(),
+        shelf: item.shelf || '',
+        needsBarcode: item.needsBarcode || false
+      };
+      newCount++;
+    });
 
-  } catch(err) {
-    document.getElementById('loading-section').style.display = 'none';
-    document.getElementById('analyze-section').style.display = 'block';
-    showError('Erro: ' + err.message);
+    // revisit zones
+    if (parsed.revisitZones && parsed.revisitZones.length > 0) {
+      revisitZones = [...new Set([...revisitZones, ...parsed.revisitZones])].slice(0, 4);
+      showRevisitAlert();
+    }
+
+    if (newCount > 0) {
+      showFeedback('🔍', `${newCount} produto(s) novo(s) detectado(s)`);
+      setTimeout(hideFeedback, 2000);
+    }
+
+    // check for products needing barcode
+    const needsBc = Object.values(products).filter(p => p.needsBarcode && !p.barcode);
+    if (needsBc.length > 0) {
+      showFeedback('📊', `Aproxime do barcode de: ${needsBc[0].name}`);
+      setTimeout(hideFeedback, 3000);
+    }
+
+    setHudStatus(`Varredura ativa · ${aiCallCount}ª análise`, 'green');
+    updateUI();
+
+  } catch(e) {
+    setHudStatus('Erro: ' + e.message.slice(0, 30), 'red');
+  } finally {
+    pendingAiCall = false;
   }
 }
 
-function setLoadingMsg(msg) {
-  document.getElementById('loading-msg').textContent = msg;
+// ── OVERLAY DRAW ──────────────────────────────────────
+function startOverlayDraw() {
+  const oc = document.getElementById('overlay-canvas');
+  const ctx = oc.getContext('2d');
+  overlayInterval = setInterval(() => {
+    const video = document.getElementById('video');
+    if (!video.videoWidth) return;
+    oc.width = video.videoWidth;
+    oc.height = video.videoHeight;
+    drawScanOverlay(ctx, oc.width, oc.height);
+  }, 100);
 }
 
-// ── RESULTS ───────────────────────────────────────────
-function renderResults(data) {
-  const items = data.items || [];
-  document.getElementById('m-prod').textContent = data.summary?.total_products ?? items.length;
-  document.getElementById('m-units').textContent = data.summary?.total_units ?? items.reduce((s,i)=>s+(i.quantity||0),0);
-  document.getElementById('m-low').textContent = data.summary?.low_stock_count ?? items.filter(i=>i.low_stock).length;
-  document.getElementById('res-time').textContent = new Date().toLocaleTimeString('pt-BR');
-  document.getElementById('res-status-text').textContent = `${items.length} produto(s) identificado(s)`;
+function drawScanOverlay(ctx, W, H) {
+  ctx.clearRect(0, 0, W, H);
+  const count = Object.keys(products).length;
+  const color = count > 0 ? 'rgba(0,229,160,0.3)' : 'rgba(255,255,255,0.15)';
 
-  if (data.observations) {
-    document.getElementById('observations-text').textContent = data.observations;
-    document.getElementById('observations-card').style.display = 'block';
+  // scanning grid lines
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  for (let c = 1; c < 3; c++) {
+    ctx.beginPath(); ctx.moveTo(W*c/3,0); ctx.lineTo(W*c/3,H); ctx.stroke();
+  }
+  for (let r = 1; r < 4; r++) {
+    ctx.beginPath(); ctx.moveTo(0,H*r/4); ctx.lineTo(W,H*r/4); ctx.stroke();
   }
 
-  const tbody = document.getElementById('table-body');
-  tbody.innerHTML = '';
-  items.forEach(item => {
-    const qty = item.quantity || 0;
-    const conf = item.confidence || 0;
-    const confPct = Math.round(conf * 100);
-    const qtyClass = qty <= 3 ? 'qty-lo' : qty <= 10 ? 'qty-md' : 'qty-hi';
-    const confColor = conf >= .85 ? '#00e5a0' : conf >= .65 ? '#ffb347' : '#ff5c5c';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><div class="prod-name">${esc(item.name||'—')}</div><div class="prod-sub">${esc(item.brand||'')}${item.shelf_position?' · '+esc(item.shelf_position):''}</div></td>
-      <td class="barcode">${item.barcode ? esc(item.barcode) : '<span style="color:var(--text3)">—</span>'}</td>
-      <td><span class="qty-badge ${qtyClass}">${qty}</span></td>
-      <td><div class="conf"><div class="conf-track"><div class="conf-fill" style="width:${confPct}%;background:${confColor}"></div></div><span class="conf-pct">${confPct}%</span></div></td>
-      <td><span class="pill ${item.low_stock?'pill-low':'pill-ok'}">${item.low_stock?'↓':'✓'}</span></td>
-    `;
-    tbody.appendChild(tr);
-  });
+  // animated scan line
+  const now = Date.now();
+  const y = (Math.sin(now / 600) * 0.5 + 0.5) * H;
+  const grad = ctx.createLinearGradient(0, y-20, 0, y+20);
+  grad.addColorStop(0, 'rgba(0,229,160,0)');
+  grad.addColorStop(0.5, 'rgba(0,229,160,0.4)');
+  grad.addColorStop(1, 'rgba(0,229,160,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, y-20, W, 40);
 }
 
-document.getElementById('btn-new-scan').addEventListener('click', () => {
-  capturedBase64 = null;
-  document.getElementById('preview-img').style.display = 'none';
-  document.getElementById('video').style.display = 'block';
-  document.getElementById('analyze-section').style.display = 'none';
-  document.getElementById('cam-action-row').style.display = 'block';
-  document.getElementById('cam-overlay').style.display = 'flex';
-  document.getElementById('cam-controls').style.display = 'none';
-  hideError();
-  goScreen('camera', document.querySelector('[data-screen="camera"]'));
-});
-
-// ── EXPORT ────────────────────────────────────────────
-document.getElementById('btn-export-csv').addEventListener('click', () => {
-  if (!inventoryData) return;
-  const items = inventoryData.items || [];
-  const rows = [['Produto','Marca','Código de Barras','Quantidade','Posição','Confiança','Baixo Estoque']];
-  items.forEach(i => rows.push([i.name||'',i.brand||'',i.barcode||'',i.quantity||0,i.shelf_position||'',Math.round((i.confidence||0)*100)+'%',i.low_stock?'SIM':'NÃO']));
-  const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `inventario_${Date.now()}.csv`; a.click();
-});
-
-document.getElementById('btn-copy-json').addEventListener('click', () => {
-  if (!inventoryData) return;
-  navigator.clipboard.writeText(JSON.stringify(inventoryData, null, 2)).then(() => {
-    const btn = document.getElementById('btn-copy-json');
-    btn.textContent = 'Copiado ✓'; setTimeout(() => btn.textContent = 'Copiar JSON', 1500);
-  });
-});
-
-// ── HISTORY ───────────────────────────────────────────
-function saveHistory(data, pdvId) {
-  let hist = JSON.parse(localStorage.getItem('pdv_history') || '[]');
-  hist.unshift({ ts: new Date().toISOString(), pdv: pdvId || 'PDV', summary: data.summary, items: data.items.length });
-  hist = hist.slice(0, 30);
-  localStorage.setItem('pdv_history', JSON.stringify(hist));
-  renderHistory();
+// ── UI HELPERS ────────────────────────────────────────
+function updateUI() {
+  const count = Object.keys(products).length;
+  document.getElementById('scan-count').textContent = count;
+  document.getElementById('hud-count-num').textContent = count;
+  document.getElementById('drawer-count-badge').textContent = count + ' produto' + (count !== 1 ? 's' : '');
+  renderDrawer();
 }
 
-function renderHistory() {
-  const hist = JSON.parse(localStorage.getItem('pdv_history') || '[]');
-  const el = document.getElementById('history-list');
-  const clearBtn = document.getElementById('btn-clear-history');
-  if (!hist.length) {
-    el.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="width:40px;height:40px;opacity:.25"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhuma análise ainda.</p></div>';
-    clearBtn.style.display = 'none';
+function renderDrawer() {
+  const body = document.getElementById('drawer-body');
+  const items = Object.values(products).sort((a,b) => b.quantity - a.quantity);
+  if (!items.length) {
+    body.innerHTML = '<div style="text-align:center;padding:30px;color:var(--t3);font-size:12px">Nenhum produto ainda</div>';
     return;
   }
-  clearBtn.style.display = 'flex';
-  el.innerHTML = hist.map(h => `
-    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:13px;font-weight:500">${esc(h.pdv)}</span>
-        <span style="font-size:10px;font-family:monospace;color:var(--text3)">${new Date(h.ts).toLocaleString('pt-BR')}</span>
+  body.innerHTML = items.map(p => `
+    <div class="prod-item" style="${p.needsBarcode && !p.barcode ? 'border-color:rgba(255,179,71,0.4)' : ''}">
+      <div class="prod-thumb">${p.method === 'barcode' || p.method === 'barcode+ai' ? '📊' : '🔍'}</div>
+      <div class="prod-info">
+        <div class="prod-name">${esc(p.name)}${p.brand ? ' <span style="color:var(--t2)">'+esc(p.brand)+'</span>' : ''}</div>
+        <div class="prod-barcode">${p.barcode ? p.barcode : (p.needsBarcode ? '<span style="color:var(--warn)">⚠ barcode necessário</span>' : '<span style="color:var(--t3)">sem barcode</span>')}</div>
+        <div class="prod-method">${methodLabel(p.method)} · ${p.shelf || 'posição desconhecida'}</div>
       </div>
-      <div style="display:flex;gap:10px;margin-top:5px">
-        <span style="font-size:11px;color:var(--accent)">${h.summary?.total_products??h.items} produtos</span>
-        <span style="font-size:11px;color:var(--info)">${h.summary?.total_units??'?'} unidades</span>
-        ${(h.summary?.low_stock_count||0)>0?`<span style="font-size:11px;color:var(--warn)">${h.summary.low_stock_count} baixo estoque</span>`:''}
+      <div class="prod-qty">
+        <div class="qty-num" style="color:${p.quantity <= 3 ? 'var(--red)' : 'var(--green)'}">${p.quantity}</div>
+        <div class="qty-label">und</div>
+        <div class="conf-dot" style="background:${p.confidence >= 0.85 ? 'var(--green)' : p.confidence >= 0.65 ? 'var(--warn)' : 'var(--red)'}"></div>
       </div>
     </div>
   `).join('');
 }
 
-document.getElementById('btn-clear-history').addEventListener('click', () => {
-  if (confirm('Limpar todo o histórico?')) {
-    localStorage.removeItem('pdv_history');
-    renderHistory();
-  }
+function methodLabel(m) {
+  if (m === 'barcode') return '📊 Barcode';
+  if (m === 'barcode+ai') return '📊+🔍 Barcode+IA';
+  return '🔍 Visão IA';
+}
+
+function toggleDrawer() {
+  drawerOpen = !drawerOpen;
+  document.getElementById('product-drawer').classList.toggle('open', drawerOpen);
+}
+document.getElementById('btn-toggle-drawer').addEventListener('click', toggleDrawer);
+
+function setHudStatus(msg, color) {
+  document.getElementById('hud-status-text').textContent = msg;
+  const dot = document.getElementById('hud-dot');
+  dot.style.background = color === 'green' ? 'var(--green)' : color === 'yellow' ? 'var(--warn)' : 'var(--red)';
+}
+
+function showFeedback(icon, text) {
+  document.getElementById('fb-icon').textContent = icon;
+  document.getElementById('fb-text').textContent = text;
+  document.getElementById('feedback-banner').style.display = 'block';
+}
+
+function hideFeedback() {
+  document.getElementById('feedback-banner').style.display = 'none';
+}
+
+function flashBarcode() {
+  const el = document.getElementById('barcode-flash');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 400);
+}
+
+function showRevisitAlert() {
+  const alert = document.getElementById('revisit-alert');
+  const zones = document.getElementById('rev-zones');
+  zones.innerHTML = revisitZones.map(z => `• ${z}`).join('<br>');
+  alert.style.display = 'block';
+  setTimeout(() => alert.style.display = 'none', 6000);
+}
+
+// ── REPORT ────────────────────────────────────────────
+function renderReport() {
+  const items = Object.values(products);
+  const totalUnits = items.reduce((s,p) => s+p.quantity, 0);
+  const lowCount = items.filter(p => p.quantity <= LOW_STOCK_THRESHOLD).length;
+
+  document.getElementById('r-prod').textContent = items.length;
+  document.getElementById('r-units').textContent = totalUnits;
+  document.getElementById('r-low').textContent = lowCount;
+  document.getElementById('r-pdv').textContent = sessionPdv ? 'PDV: ' + sessionPdv : '';
+  document.getElementById('r-time').textContent = sessionStart ? sessionStart.toLocaleString('pt-BR') : '';
+
+  const tbody = document.getElementById('report-tbody');
+  tbody.innerHTML = items.sort((a,b) => b.quantity - a.quantity).map(p => `
+    <tr>
+      <td>
+        <div style="font-weight:500;font-size:11px">${esc(p.name)}</div>
+        <div style="font-size:9px;color:var(--t2)">${esc(p.brand)}</div>
+      </td>
+      <td style="font-family:monospace;font-size:9px;color:var(--blue)">${p.barcode || '<span style="color:var(--t3)">—</span>'}</td>
+      <td><span style="font-weight:700;color:${p.quantity<=3?'var(--red)':'var(--green)'}">${p.quantity}</span></td>
+      <td><span class="badge ${p.method.includes('barcode')?'badge-bc':'badge-ai'}">${p.method.includes('barcode')?'BC':'IA'}</span></td>
+      <td style="font-family:monospace;font-size:9px;color:var(--t2)">${Math.round(p.confidence*100)}%</td>
+    </tr>
+  `).join('');
+}
+
+// ── EXPORT CSV ────────────────────────────────────────
+document.getElementById('btn-export-csv').addEventListener('click', () => {
+  const items = Object.values(products);
+  const rows = [['Produto','Marca','Código de Barras','Quantidade','Prateleira','Confiança','Método','Baixo Estoque']];
+  items.forEach(p => rows.push([
+    p.name, p.brand, p.barcode||'', p.quantity, p.shelf||'',
+    Math.round(p.confidence*100)+'%', p.method, p.quantity<=3?'SIM':'NÃO'
+  ]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));
+  a.download = `inventario_${sessionPdv||'pdv'}_${Date.now()}.csv`;
+  a.click();
 });
 
+document.getElementById('btn-new-inventory').addEventListener('click', () => {
+  products = {}; revisitZones = []; aiCallCount = 0;
+  goScreen('start', document.querySelector('.bnav-btn[onclick*="start"]'));
+});
+
+// ── NORMALIZE / DEDUP ─────────────────────────────────
+function normalizeKey(name) {
+  return name.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]/g,' ')
+    .trim().replace(/\s+/g,'_');
+}
+
+function stringSimilarity(a, b) {
+  a = normalizeKey(a); b = normalizeKey(b);
+  if (a === b) return 1;
+  if (a.length < 3 || b.length < 3) return 0;
+  const longer = a.length > b.length ? a : b;
+  const shorter = a.length > b.length ? b : a;
+  if (longer.includes(shorter)) return 0.9;
+  let matches = 0;
+  for (let i = 0; i < shorter.length - 1; i++) {
+    if (longer.includes(shorter.slice(i, i+2))) matches++;
+  }
+  return (2 * matches) / (a.length + b.length - 2);
+}
+
 // ── SETTINGS ──────────────────────────────────────────
-function toggleKey() {
-  const inp = document.getElementById('api-key-input');
-  const btn = document.getElementById('key-toggle-btn');
+function toggleKeyVis() {
+  const inp = document.getElementById('api-key-inp');
+  const btn = document.querySelector('.key-btn');
   inp.type = inp.type === 'password' ? 'text' : 'password';
   btn.textContent = inp.type === 'password' ? 'mostrar' : 'ocultar';
 }
 
 document.getElementById('btn-save-key').addEventListener('click', () => {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key.startsWith('sk-')) {
-    document.getElementById('key-status').style.display = 'block';
-    document.getElementById('key-status').innerHTML = '<div class="alert alert-err">Chave inválida. Deve começar com sk-ant-...</div>';
-    return;
-  }
+  const key = document.getElementById('api-key-inp').value.trim();
+  const ok = document.getElementById('key-ok');
+  const err = document.getElementById('key-err');
+  ok.style.display = 'none'; err.style.display = 'none';
+  if (!key.startsWith('sk-')) { err.style.display = 'block'; return; }
   localStorage.setItem('anthropic_api_key', key);
-  document.getElementById('key-status').style.display = 'block';
-  document.getElementById('key-status').innerHTML = '<div class="alert alert-ok">✓ Chave salva com sucesso!</div>';
+  ok.style.display = 'block';
   document.getElementById('key-badge').textContent = 'configurada';
-  document.getElementById('key-badge').className = 'badge-ok';
-  setTimeout(() => document.getElementById('key-status').style.display = 'none', 2000);
-});
-
-// ── INSTALL PWA ───────────────────────────────────────
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredInstall = e;
-  document.getElementById('btn-install').style.display = 'flex';
-});
-
-document.getElementById('btn-install').addEventListener('click', async () => {
-  if (!deferredInstall) return;
-  deferredInstall.prompt();
-  const { outcome } = await deferredInstall.userChoice;
-  if (outcome === 'accepted') document.getElementById('btn-install').style.display = 'none';
-  deferredInstall = null;
+  document.getElementById('key-badge').className = 'sbadge ok';
+  setTimeout(() => ok.style.display = 'none', 2000);
 });
 
 // ── UTILS ─────────────────────────────────────────────
-function showError(msg) {
-  const el = document.getElementById('error-section');
-  el.textContent = msg; el.style.display = 'block';
-}
-function hideError() {
-  document.getElementById('error-section').style.display = 'none';
-}
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-
-// ── OVERLAY ANALYSIS ENGINE ────────────────────────────
-let analysisInterval = null;
-const anaCanvas = document.createElement('canvas');
-const anaCtx = anaCanvas.getContext('2d');
-
-function startOverlayAnalysis() {
-  const overlayCanvas = document.getElementById('overlay-canvas');
-  overlayCanvas.style.display = 'block';
-  document.getElementById('quality-bar').style.display = 'block';
-  document.getElementById('ind-row').style.display = 'block';
-  if (analysisInterval) clearInterval(analysisInterval);
-  analysisInterval = setInterval(runAnalysis, 800);
-  runAnalysis();
-}
-
-function stopOverlayAnalysis() {
-  if (analysisInterval) { clearInterval(analysisInterval); analysisInterval = null; }
-  const overlayCanvas = document.getElementById('overlay-canvas');
-  overlayCanvas.style.display = 'none';
-  document.getElementById('quality-bar').style.display = 'none';
-  document.getElementById('ind-row').style.display = 'none';
-  document.getElementById('feedback-msg').style.display = 'none';
-}
-
-function runAnalysis() {
-  const video = document.getElementById('video');
-  if (!video.videoWidth || !stream) return;
-
-  const W = video.videoWidth, H = video.videoHeight;
-  anaCanvas.width = W; anaCanvas.height = H;
-  anaCtx.drawImage(video, 0, 0, W, H);
-
-  const brightness = calcBrightness(anaCtx, W, H);
-  const focus = calcFocus(anaCtx, W, H);
-  const distScore = calcDistance(W, H);
-  const angleScore = calcAngle(anaCtx, W, H);
-
-  drawOverlay(video, brightness, focus, distScore, angleScore);
-  updateIndicators(brightness, focus, distScore, angleScore);
-}
-
-function calcBrightness(ctx, W, H) {
-  const step = Math.max(1, Math.floor(W / 40));
-  const data = ctx.getImageData(0, 0, W, H).data;
-  let sum = 0, count = 0;
-  for (let y = 0; y < H; y += step) {
-    for (let x = 0; x < W; x += step) {
-      const i = (y * W + x) * 4;
-      sum += 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-      count++;
-    }
-  }
-  return sum / count; // 0-255
-}
-
-function calcFocus(ctx, W, H) {
-  // Laplacian variance — higher = sharper
-  const cx = Math.floor(W * 0.25), cy = Math.floor(H * 0.25);
-  const cw = Math.floor(W * 0.5), ch = Math.floor(H * 0.5);
-  const data = ctx.getImageData(cx, cy, cw, ch).data;
-  const pixels = [];
-  for (let i = 0; i < data.length; i += 4) {
-    pixels.push(0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
-  }
-  let variance = 0, mean = pixels.reduce((a,b) => a+b, 0) / pixels.length;
-  const step = Math.max(1, Math.floor(pixels.length / 500));
-  let lap = 0, lapCount = 0;
-  for (let i = cw; i < pixels.length - cw; i += step) {
-    const laplacian = Math.abs(pixels[i-1] + pixels[i+1] + pixels[i-cw] + pixels[i+cw] - 4*pixels[i]);
-    lap += laplacian; lapCount++;
-  }
-  return lapCount > 0 ? lap / lapCount : 0; // higher = sharper
-}
-
-function calcDistance(W, H) {
-  // ideal aspect for shelf: roughly 4:3 landscape or portrait
-  // use video aspect ratio relative to ideal coverage
-  const aspect = W / H;
-  // portrait (3:4) = good for tall shelf, landscape = too far or wrong angle
-  if (aspect < 0.6) return 40; // muito próximo / vertical demais
-  if (aspect < 0.85) return 90; // ótimo para gôndola
-  if (aspect < 1.2) return 75; // ok
-  if (aspect < 1.6) return 55; // paisagem, pode estar longe
-  return 35; // muito paisagem
-}
-
-function calcAngle(ctx, W, H) {
-  // compare brightness of horizontal strips — even = good angle
-  const data = ctx.getImageData(0, 0, W, H).data;
-  const strips = 6;
-  const stripH = Math.floor(H / strips);
-  const brightnesses = [];
-  for (let s = 0; s < strips; s++) {
-    let sum = 0, count = 0;
-    const y0 = s * stripH;
-    for (let y = y0; y < y0 + stripH; y += 4) {
-      for (let x = 0; x < W; x += 8) {
-        const i = (y * W + x) * 4;
-        sum += 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-        count++;
-      }
-    }
-    brightnesses.push(sum / count);
-  }
-  const avg = brightnesses.reduce((a,b) => a+b, 0) / strips;
-  const variance = brightnesses.reduce((s, b) => s + Math.pow(b - avg, 2), 0) / strips;
-  const stdDev = Math.sqrt(variance);
-  // low stdDev in brightness across strips = more uniform = better angle
-  if (stdDev < 8) return 90;
-  if (stdDev < 16) return 75;
-  if (stdDev < 28) return 55;
-  if (stdDev < 40) return 35;
-  return 20;
-}
-
-function drawOverlay(video, brightness, focus, distScore, angleScore) {
-  const oc = document.getElementById('overlay-canvas');
-  oc.width = video.videoWidth; oc.height = video.videoHeight;
-  const ctx = oc.getContext('2d');
-  ctx.clearRect(0, 0, oc.width, oc.height);
-
-  const W = oc.width, H = oc.height;
-  const score = calcScore(brightness, focus, distScore, angleScore);
-  const gridColor = score >= 70 ? 'rgba(0,229,160,0.35)' : score >= 45 ? 'rgba(255,179,71,0.35)' : 'rgba(255,92,92,0.35)';
-
-  // draw shelf grid — 3 cols x 4 rows
-  ctx.strokeStyle = gridColor;
-  ctx.lineWidth = Math.max(1, W / 300);
-  const cols = 3, rows = 4;
-  for (let c = 1; c < cols; c++) {
-    ctx.beginPath(); ctx.moveTo(W * c / cols, 0); ctx.lineTo(W * c / cols, H); ctx.stroke();
-  }
-  for (let r = 1; r < rows; r++) {
-    ctx.beginPath(); ctx.moveTo(0, H * r / rows); ctx.lineTo(W, H * r / rows); ctx.stroke();
-  }
-
-  // center crosshair
-  const cx = W/2, cy = H/2, cs = W * 0.06;
-  ctx.strokeStyle = score >= 70 ? 'rgba(0,229,160,0.8)' : 'rgba(255,255,255,0.5)';
-  ctx.lineWidth = Math.max(1.5, W / 200);
-  ctx.beginPath(); ctx.moveTo(cx - cs, cy); ctx.lineTo(cx + cs, cy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx, cy - cs); ctx.lineTo(cx, cy + cs); ctx.stroke();
-
-  // if dark, add brightness warning vignette
-  if (brightness < 60) {
-    const grad = ctx.createRadialGradient(cx, cy, H*0.2, cx, cy, H*0.7);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(255,150,0,0.18)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-  }
-}
-
-function calcScore(brightness, focus, distScore, angleScore) {
-  const bScore = brightness < 40 ? 20 : brightness < 70 ? 50 : brightness < 200 ? 100 : brightness < 230 ? 80 : 40;
-  const fScore = focus < 2 ? 20 : focus < 5 ? 50 : focus < 12 ? 80 : 100;
-  return Math.round(bScore * 0.25 + fScore * 0.35 + distScore * 0.2 + angleScore * 0.2);
-}
-
-function updateIndicators(brightness, focus, distScore, angleScore) {
-  const score = calcScore(brightness, focus, distScore, angleScore);
-
-  // score bar
-  const barEl = document.getElementById('score-bar');
-  const pctEl = document.getElementById('score-pct');
-  barEl.style.width = score + '%';
-  barEl.style.background = score >= 70 ? '#00e5a0' : score >= 45 ? '#ffb347' : '#ff5c5c';
-  pctEl.textContent = score + '%';
-  pctEl.style.color = score >= 70 ? '#00e5a0' : score >= 45 ? '#ffb347' : '#ff5c5c';
-
-  function setInd(dotId, txtId, ok, warn, label, okMsg, warnMsg, errMsg) {
-    const dot = document.getElementById(dotId);
-    const txt = document.getElementById(txtId);
-    if (ok) { dot.style.background = '#00e5a0'; txt.textContent = label + ' ' + okMsg; }
-    else if (warn) { dot.style.background = '#ffb347'; txt.textContent = label + ' ' + warnMsg; }
-    else { dot.style.background = '#ff5c5c'; txt.textContent = label + ' ' + errMsg; }
-  }
-
-  setInd('il-dot','il-txt', brightness >= 70 && brightness < 200, brightness >= 40 || brightness >= 200, 'Luz', 'boa', brightness < 70 ? 'fraca' : 'ok', brightness < 40 ? 'muito escuro' : 'muito claro');
-  setInd('if-dot','if-txt', focus >= 12, focus >= 5, 'Foco', 'nítido', 'razoável', 'tremido');
-  setInd('id-dot','id-txt', distScore >= 80, distScore >= 55, 'Distância', 'ideal', distScore < 55 ? 'longe' : 'ajustar', 'muito longe');
-  setInd('ia-dot','ia-txt', angleScore >= 75, angleScore >= 45, 'Ângulo', 'bom', 'inclinar', 'ruim');
-
-  // main feedback
-  const fbMsg = document.getElementById('feedback-msg');
-  const fbTxt = document.getElementById('feedback-text');
-  let msg = null;
-  if (brightness < 40) msg = '⚠ Muito escuro — acenda a luz';
-  else if (brightness >= 220) msg = '⚠ Muito claro — evite luz direta';
-  else if (focus < 5) msg = '📷 Câmera tremendo — segure firme';
-  else if (distScore < 55) msg = '↔ Aproxime-se da prateleira';
-  else if (angleScore < 45) msg = '📐 Centralize a câmera na prateleira';
-  else if (score >= 70) { fbMsg.style.display = 'none'; return; }
-  else msg = '🔄 Ajuste o enquadramento';
-
-  fbTxt.textContent = msg;
-  fbMsg.style.display = 'block';
-  // auto-hide good feedback
-  if (score >= 70) setTimeout(() => fbMsg.style.display = 'none', 2000);
 }
 
 // ── INIT ──────────────────────────────────────────────
 (function init() {
   const key = localStorage.getItem('anthropic_api_key');
   if (key) {
-    document.getElementById('api-key-input').value = key;
+    document.getElementById('api-key-inp').value = key;
     document.getElementById('key-badge').textContent = 'configurada';
-    document.getElementById('key-badge').className = 'badge-ok';
+    document.getElementById('key-badge').className = 'sbadge ok';
   }
-  renderHistory();
+  if (!window.ZXing) {
+    document.getElementById('bc-badge').textContent = 'não carregado';
+    document.getElementById('bc-badge').className = 'sbadge no';
+  }
 })();
 </script>
 </body>
