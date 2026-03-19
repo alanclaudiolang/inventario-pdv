@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Inventário PDV">
+<title>Inventário PDV</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0c0f;--s1:#111318;--s2:#181c23;--border:rgba(255,255,255,0.08);
+  --border2:rgba(255,255,255,0.14);--text:#e8eaf0;--text2:#7b8194;--text3:#4a4f5e;
+  --accent:#00e5a0;--accent2:#00b87d;--warn:#ffb347;--danger:#ff5c5c;--info:#5c9eff;
+  --r:10px;--r2:14px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;overflow-x:hidden}
+body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:var(--s1);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;safe-area-inset-top:env(safe-area-inset-top)}
+.nav-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-icon svg{width:16px;height:16px}
+.nav-title{font-size:15px;font-weight:600}
+.nav-sub{font-size:11px;color:var(--text2)}
+.nav-badge{margin-left:auto;font-size:10px;font-family:monospace;background:rgba(0,229,160,0.1);color:var(--accent);padding:3px 8px;border-radius:5px;border:1px solid rgba(0,229,160,0.2)}
+
+/* SCREENS */
+.screen{display:none;flex:1;flex-direction:column;padding:14px;gap:12px;overflow-y:auto}
+.screen.active{display:flex}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px}
+.card-label{font-size:10px;font-family:monospace;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+
+/* BOTTOM NAV */
+.bottom-nav{background:var(--s1);border-top:1px solid var(--border);display:flex;padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:none;background:transparent;color:var(--text3);font-size:10px;cursor:pointer;transition:color .15s;font-family:inherit}
+.bnav-btn svg{width:20px;height:20px}
+.bnav-btn.active{color:var(--accent)}
+
+/* CAMERA AREA */
+.camera-wrap{position:relative;background:#000;border-radius:var(--r2);overflow:hidden;aspect-ratio:3/4;width:100%}
+#video{width:100%;height:100%;object-fit:cover;display:block}
+.camera-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(0,0,0,0.5)}
+.camera-hint{font-size:13px;color:rgba(255,255,255,0.7);text-align:center;padding:0 20px}
+.corner{position:absolute;width:24px;height:24px;border-color:var(--accent);border-style:solid;border-width:0}
+.corner.tl{top:16px;left:16px;border-top-width:2px;border-left-width:2px}
+.corner.tr{top:16px;right:16px;border-top-width:2px;border-right-width:2px}
+.corner.bl{bottom:16px;left:16px;border-bottom-width:2px;border-left-width:2px}
+.corner.br{bottom:16px;right:16px;border-bottom-width:2px;border-right-width:2px}
+
+/* BUTTONS */
+.btn{padding:13px 20px;border-radius:var(--r);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:active{background:var(--accent2);transform:scale(0.98)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:active{background:var(--s2)}
+.btn-danger{background:rgba(255,92,92,0.1);color:var(--danger);border:1px solid rgba(255,92,92,0.2)}
+
+/* CAPTURE BTN */
+.capture-row{display:flex;gap:10px;align-items:center;margin-top:4px}
+.btn-capture{width:64px;height:64px;border-radius:50%;background:var(--accent);border:3px solid rgba(255,255,255,0.3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-capture:active{transform:scale(0.93);background:var(--accent2)}
+.btn-capture svg{width:26px;height:26px;color:#000}
+.btn-flip{width:44px;height:44px;border-radius:50%;background:var(--s2);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.btn-flip svg{width:18px;height:18px}
+
+/* PREVIEW */
+#preview-img{width:100%;border-radius:var(--r2);display:none;border:1px solid var(--border)}
+
+/* FORM */
+.form-row{margin-bottom:12px}
+.form-row label{font-size:12px;color:var(--text2);display:block;margin-bottom:6px}
+.form-row input,.form-row select,.form-row textarea{
+  width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);font-family:inherit;font-size:14px;padding:11px 13px;outline:none;
+  transition:border-color .15s;-webkit-appearance:none;
+}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent)}
+.form-row textarea{resize:none;height:70px}
+.form-row select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237b8194' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+
+/* KEY FIELD */
+.key-wrap{position:relative}
+.key-wrap input{padding-right:80px}
+.key-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--text2);font-size:11px;font-family:monospace;cursor:pointer;padding:4px}
+
+/* STATUS */
+.status-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);font-size:12px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.status-dot.pulse{background:var(--accent);animation:pulse 1.2s infinite}
+.status-dot.ok{background:var(--accent)}
+.status-dot.err{background:var(--danger)}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.metric{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:12px}
+.metric-label{font-size:9px;font-family:monospace;color:var(--text3);letter-spacing:.4px;margin-bottom:6px;text-transform:uppercase}
+.metric-val{font-size:26px;font-weight:700;letter-spacing:-1px}
+.metric-val.green{color:var(--accent)}
+.metric-val.blue{color:var(--info)}
+.metric-val.warn{color:var(--warn)}
+
+/* TABLE */
+.results-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.results-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.results-head h3{font-size:13px;font-weight:500}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:8px 12px;text-align:left;font-size:9px;font-family:monospace;color:var(--text3);letter-spacing:.6px;font-weight:400;border-bottom:1px solid var(--border);background:var(--s2);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.04)}
+tbody td{padding:10px 12px;vertical-align:middle}
+.prod-name{font-weight:500;font-size:12px}
+.prod-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.barcode{font-family:monospace;font-size:10px;color:var(--info)}
+.qty-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 8px;border-radius:5px;font-weight:700;font-size:12px;font-family:monospace}
+.qty-hi{background:rgba(0,229,160,0.1);color:var(--accent)}
+.qty-md{background:rgba(255,179,71,0.1);color:var(--warn)}
+.qty-lo{background:rgba(255,92,92,0.1);color:var(--danger)}
+.pill{font-size:9px;padding:2px 7px;border-radius:4px;font-family:monospace}
+.pill-ok{background:rgba(0,229,160,0.1);color:var(--accent)}
+.pill-low{background:rgba(255,179,71,0.1);color:var(--warn)}
+
+/* ERROR / SUCCESS */
+.alert{padding:12px 14px;border-radius:var(--r);font-size:13px;line-height:1.5}
+.alert-err{background:rgba(255,92,92,0.08);border:1px solid rgba(255,92,92,0.25);color:var(--danger)}
+.alert-ok{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);color:var(--accent)}
+
+/* CONF BAR */
+.conf{display:flex;align-items:center;gap:6px}
+.conf-track{flex:1;height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;min-width:36px}
+.conf-fill{height:100%;border-radius:2px}
+.conf-pct{font-size:9px;font-family:monospace;color:var(--text2);min-width:24px;text-align:right}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;color:var(--text3);text-align:center;gap:10px}
+.empty svg{width:40px;height:40px;opacity:.25}
+.empty p{font-size:13px;line-height:1.6;max-width:220px}
+
+/* SPINNER */
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite}
+.spin-white{border-color:rgba(255,255,255,0.2);border-top-color:#fff}
+
+/* JSON panel */
+.json-panel{background:var(--s2);border-radius:var(--r);padding:12px;margin-top:8px}
+.json-panel pre{font-family:monospace;font-size:10px;color:var(--text2);white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;line-height:1.6}
+
+/* EXPORT ROW */
+.export-row{display:flex;gap:8px}
+.export-row .btn{font-size:12px;padding:9px 14px}
+
+/* SETTINGS SPECIFIC */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:13px}
+.setting-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.badge-ok{background:rgba(0,229,160,0.1);color:var(--accent);padding:3px 8px;border-radius:5px;font-size:11px;font-family:monospace}
+.badge-err{background:rgba(255,92,92,0.1);color:var(--danger);padding:3px 8px;border-radius:5px;font-size:11px;font-family:monospace}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <path d="M8 21h8M12 17v4M7 8h.01M11 8h6M7 12h.01M11 12h3"/>
+    </svg>
+  </div>
+  <div>
+    <div class="nav-title">Inventário PDV</div>
+    <div class="nav-sub">Reconhecimento visual · IA</div>
+  </div>
+  <div class="nav-badge">v1.0</div>
+</div>
+
+<!-- SCREEN: CÂMERA -->
+<div class="screen active" id="screen-camera">
+
+  <div class="card">
+    <div class="card-label">📷 Captura</div>
+    <div class="camera-wrap" id="camera-wrap">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <div class="camera-overlay" id="cam-overlay">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        <div class="camera-hint">Toque em "Abrir câmera" para iniciar</div>
+      </div>
+    </div>
+    <canvas id="canvas" style="display:none"></canvas>
+    <img id="preview-img" alt="preview">
+
+    <div class="capture-row" style="margin-top:12px;justify-content:center" id="cam-controls" style="display:none">
+      <button class="btn-flip" id="btn-flip" title="Virar câmera">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 4v6h6M23 20v-6h-6"/>
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+        </svg>
+      </button>
+      <button class="btn-capture" id="btn-capture">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10" fill="rgba(0,0,0,0.3)"/>
+          <circle cx="12" cy="12" r="6" fill="currentColor"/>
+        </svg>
+      </button>
+      <div style="width:44px"></div>
+    </div>
+  </div>
+
+  <div id="cam-action-row">
+    <button class="btn btn-primary" id="btn-open-cam">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      Abrir câmera
+    </button>
+  </div>
+
+  <div id="or-divider" style="display:none;text-align:center;font-size:12px;color:var(--text3)">— ou selecionar da galeria —</div>
+  <input type="file" id="file-input" accept="image/*" style="display:none">
+  <button class="btn btn-ghost" id="btn-gallery" style="display:none">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+      <polyline points="21 15 16 10 5 21"/>
+    </svg>
+    Escolher da galeria
+  </button>
+
+  <div id="analyze-section" style="display:none">
+    <div class="form-row">
+      <label>Código do PDV (opcional)</label>
+      <input type="text" id="pdv-id" placeholder="Ex: PDV-001">
+    </div>
+    <div class="form-row">
+      <label>Categoria</label>
+      <select id="category">
+        <option value="">Geral</option>
+        <option value="beverages">Bebidas</option>
+        <option value="snacks">Snacks</option>
+        <option value="chocolates">Chocolates / Doces</option>
+        <option value="cigarettes">Cigarros</option>
+        <option value="personal_care">Higiene / Beleza</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="btn-analyze" style="margin-top:4px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Analisar estoque
+    </button>
+    <button class="btn btn-ghost" id="btn-retake" style="margin-top:8px">Tirar outra foto</button>
+  </div>
+
+  <div id="loading-section" style="display:none">
+    <div class="status-bar">
+      <div class="status-dot pulse"></div>
+      <span id="loading-msg" style="color:var(--text2)">Analisando imagem...</span>
+    </div>
+  </div>
+
+  <div id="error-section" style="display:none" class="alert alert-err"></div>
+
+</div>
+
+<!-- SCREEN: RESULTADOS -->
+<div class="screen" id="screen-results">
+
+  <div class="status-bar" id="res-status">
+    <div class="status-dot ok"></div>
+    <span id="res-status-text" style="color:var(--text2)">Análise concluída</span>
+    <span id="res-time" style="font-family:monospace;font-size:10px;color:var(--text3);margin-left:auto"></span>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Produtos</div><div class="metric-val green" id="m-prod">0</div></div>
+    <div class="metric"><div class="metric-label">Unidades</div><div class="metric-val blue" id="m-units">0</div></div>
+    <div class="metric"><div class="metric-label">Baixo Est.</div><div class="metric-val warn" id="m-low">0</div></div>
+  </div>
+
+  <div class="results-card">
+    <div class="results-head">
+      <h3>Itens identificados</h3>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>PRODUTO</th><th>BARCODE</th><th>QTD</th><th>CONF</th><th>ST</th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="observations-card" class="card" style="display:none">
+    <div class="card-label">Observações da IA</div>
+    <p id="observations-text" style="font-size:13px;color:var(--text2);line-height:1.6"></p>
+  </div>
+
+  <div class="export-row">
+    <button class="btn btn-ghost" id="btn-export-csv" style="flex:1">Exportar CSV</button>
+    <button class="btn btn-ghost" id="btn-copy-json" style="flex:1">Copiar JSON</button>
+  </div>
+
+  <button class="btn btn-primary" id="btn-new-scan">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+    Nova análise
+  </button>
+
+</div>
+
+<!-- SCREEN: HISTÓRICO -->
+<div class="screen" id="screen-history">
+  <div class="card">
+    <div class="card-label">📋 Histórico de análises</div>
+    <div id="history-list">
+      <div class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        <p>Nenhuma análise ainda. Faça sua primeira captura!</p>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-danger" id="btn-clear-history" style="display:none">Limpar histórico</button>
+</div>
+
+<!-- SCREEN: CONFIGURAÇÕES -->
+<div class="screen" id="screen-settings">
+
+  <div class="card">
+    <div class="card-label">🔑 API Key Anthropic</div>
+    <div class="form-row">
+      <label>Sua chave de API</label>
+      <div class="key-wrap">
+        <input type="password" id="api-key-input" placeholder="sk-ant-api03-...">
+        <button class="key-toggle" id="key-toggle-btn" onclick="toggleKey()">mostrar</button>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:14px">
+      Sua chave é salva localmente no dispositivo (localStorage). Nunca é enviada a terceiros — apenas usada diretamente na API da Anthropic.
+    </p>
+    <button class="btn btn-primary" id="btn-save-key">Salvar chave</button>
+    <div id="key-status" style="margin-top:10px;display:none"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">ℹ Status do app</div>
+    <div class="setting-row">
+      <div><div class="setting-label">API Key</div><div class="setting-sub">Chave Anthropic configurada</div></div>
+      <span id="key-badge" class="badge-err">não configurada</span>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Modelo</div><div class="setting-sub">Versão utilizada</div></div>
+      <span class="badge-ok">claude-sonnet-4</span>
+    </div>
+    <div class="setting-row">
+      <div><div class="setting-label">Câmera</div><div class="setting-sub">Acesso ao hardware</div></div>
+      <span id="cam-badge" class="badge-err">não testada</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">📲 Instalar como app</div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px">
+      No Chrome Android: toque nos <strong>3 pontos</strong> do menu → <strong>"Adicionar à tela inicial"</strong>.<br><br>
+      O app será instalado sem precisar da Play Store.
+    </p>
+    <div id="install-btn-wrap">
+      <button class="btn btn-primary" id="btn-install" style="display:none">Instalar app</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="bnav-btn active" data-screen="camera" onclick="goScreen('camera',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+    </svg>
+    Câmera
+  </button>
+  <button class="bnav-btn" data-screen="results" onclick="goScreen('results',this)" id="bnav-results" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4M7 8h.01M11 8h6M7 12h.01M11 12h3"/>
+    </svg>
+    Resultado
+  </button>
+  <button class="bnav-btn" data-screen="history" onclick="goScreen('history',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+    </svg>
+    Histórico
+  </button>
+  <button class="bnav-btn" data-screen="settings" onclick="goScreen('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    Config
+  </button>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let stream = null;
+let facingMode = 'environment';
+let capturedBase64 = null;
+let inventoryData = null;
+let deferredInstall = null;
+
+const SYSTEM_PROMPT = `Você é um agente de inventário de PDV. Analise a imagem e retorne APENAS JSON puro, sem texto extra, sem markdown, sem backticks.
+
+Estrutura obrigatória:
+{"pdv":null,"timestamp":"2024-01-01T00:00:00Z","summary":{"total_products":1,"total_units":1,"low_stock_count":0},"items":[{"name":"Nome","brand":"Marca","barcode":null,"quantity":1,"shelf_position":"prateleira 1","confidence":0.9,"low_stock":false,"notes":null}],"observations":"texto"}
+
+Regras: comece com { e termine com }. Conte todas as unidades. Agrupe por SKU. barcode=null se não legível.`;
+
+// ── SCREENS ────────────────────────────────────────────
+function goScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── CAMERA ────────────────────────────────────────────
+document.getElementById('btn-open-cam').addEventListener('click', openCamera);
+document.getElementById('btn-capture').addEventListener('click', capture);
+document.getElementById('btn-flip').addEventListener('click', flipCamera);
+document.getElementById('btn-gallery').addEventListener('click', () => document.getElementById('file-input').click());
+document.getElementById('file-input').addEventListener('change', e => { if(e.target.files[0]) loadFile(e.target.files[0]); });
+
+async function openCamera() {
+  try {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); }
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+      audio: false
+    });
+    const video = document.getElementById('video');
+    video.srcObject = stream;
+    await video.play();
+    document.getElementById('cam-overlay').style.display = 'none';
+    document.getElementById('cam-controls').style.display = 'flex';
+    document.getElementById('btn-open-cam').style.display = 'none';
+    document.getElementById('or-divider').style.display = 'block';
+    document.getElementById('btn-gallery').style.display = 'flex';
+    document.getElementById('cam-badge').textContent = 'ok';
+    document.getElementById('cam-badge').className = 'badge-ok';
+  } catch(e) {
+    showError('Erro ao acessar câmera: ' + e.message + '. Use "Galeria" para selecionar uma foto.');
+    document.getElementById('btn-gallery').style.display = 'flex';
+    document.getElementById('or-divider').style.display = 'block';
+    document.getElementById('btn-open-cam').style.display = 'none';
+  }
+}
+
+async function flipCamera() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  await openCamera();
+}
+
+function capture() {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const W = video.videoWidth, H = video.videoHeight;
+  const MAX = 1024;
+  let w = W, h = H;
+  if (w > MAX || h > MAX) {
+    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+    else { w = Math.round(w * MAX / h); h = MAX; }
+  }
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  capturedBase64 = dataUrl.split(',')[1];
+  showPreview(dataUrl);
+  // stop stream
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+}
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1024; let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) { if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
+      const canvas = document.getElementById('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      capturedBase64 = dataUrl.split(',')[1];
+      showPreview(dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(dataUrl) {
+  const video = document.getElementById('video');
+  video.style.display = 'none';
+  const prev = document.getElementById('preview-img');
+  prev.src = dataUrl; prev.style.display = 'block';
+  document.getElementById('cam-controls').style.display = 'none';
+  document.getElementById('cam-action-row').style.display = 'none';
+  document.getElementById('or-divider').style.display = 'none';
+  document.getElementById('btn-gallery').style.display = 'none';
+  document.getElementById('analyze-section').style.display = 'block';
+  document.getElementById('cam-overlay').style.display = 'none';
+  hideError();
+}
+
+document.getElementById('btn-retake').addEventListener('click', () => {
+  capturedBase64 = null;
+  document.getElementById('preview-img').style.display = 'none';
+  document.getElementById('video').style.display = 'block';
+  document.getElementById('analyze-section').style.display = 'none';
+  document.getElementById('cam-action-row').style.display = 'block';
+  document.getElementById('cam-overlay').style.display = 'flex';
+  document.getElementById('cam-controls').style.display = 'none';
+  hideError();
+});
+
+// ── ANALYZE ───────────────────────────────────────────
+document.getElementById('btn-analyze').addEventListener('click', analyze);
+
+async function analyze() {
+  const apiKey = localStorage.getItem('anthropic_api_key');
+  if (!apiKey) {
+    showError('Configure sua API Key nas ⚙ Configurações primeiro.');
+    return;
+  }
+  if (!capturedBase64) { showError('Capture uma imagem primeiro.'); return; }
+
+  document.getElementById('analyze-section').style.display = 'none';
+  document.getElementById('loading-section').style.display = 'block';
+  hideError();
+
+  const pdvId = document.getElementById('pdv-id').value.trim();
+  const cat = document.getElementById('category').value;
+  const ctx = [pdvId && `PDV: ${pdvId}`, cat && `Categoria: ${cat}`].filter(Boolean).join('. ');
+
+  setLoadingMsg('Enviando imagem para análise...');
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: SYSTEM_PROMPT + (ctx ? `\nContexto: ${ctx}` : ''),
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: capturedBase64 } },
+            { type: 'text', text: 'Retorne apenas o JSON do inventário.' }
+          ]
+        }]
+      })
+    });
+
+    setLoadingMsg('Processando resposta...');
+
+    if (!resp.ok) {
+      const e = await resp.json().catch(() => ({}));
+      throw new Error(e.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const raw = data.content.map(b => b.text || '').join('');
+
+    let parsed = null;
+    for (const fn of [
+      () => JSON.parse(raw.trim()),
+      () => JSON.parse(raw.replace(/```[\w]*/g,'').replace(/```/g,'').trim()),
+      () => { const m = raw.match(/\{[\s\S]*\}/); if (!m) throw 0; return JSON.parse(m[0]); }
+    ]) { try { parsed = fn(); break; } catch {} }
+
+    if (!parsed || !Array.isArray(parsed.items)) throw new Error('Resposta inválida da IA. Tente novamente.');
+
+    inventoryData = parsed;
+    saveHistory(parsed, pdvId);
+    renderResults(parsed);
+
+    document.getElementById('loading-section').style.display = 'none';
+    document.getElementById('bnav-results').style.display = 'flex';
+    goScreen('results', document.querySelector('[data-screen="results"]'));
+
+  } catch(err) {
+    document.getElementById('loading-section').style.display = 'none';
+    document.getElementById('analyze-section').style.display = 'block';
+    showError('Erro: ' + err.message);
+  }
+}
+
+function setLoadingMsg(msg) {
+  document.getElementById('loading-msg').textContent = msg;
+}
+
+// ── RESULTS ───────────────────────────────────────────
+function renderResults(data) {
+  const items = data.items || [];
+  document.getElementById('m-prod').textContent = data.summary?.total_products ?? items.length;
+  document.getElementById('m-units').textContent = data.summary?.total_units ?? items.reduce((s,i)=>s+(i.quantity||0),0);
+  document.getElementById('m-low').textContent = data.summary?.low_stock_count ?? items.filter(i=>i.low_stock).length;
+  document.getElementById('res-time').textContent = new Date().toLocaleTimeString('pt-BR');
+  document.getElementById('res-status-text').textContent = `${items.length} produto(s) identificado(s)`;
+
+  if (data.observations) {
+    document.getElementById('observations-text').textContent = data.observations;
+    document.getElementById('observations-card').style.display = 'block';
+  }
+
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  items.forEach(item => {
+    const qty = item.quantity || 0;
+    const conf = item.confidence || 0;
+    const confPct = Math.round(conf * 100);
+    const qtyClass = qty <= 3 ? 'qty-lo' : qty <= 10 ? 'qty-md' : 'qty-hi';
+    const confColor = conf >= .85 ? '#00e5a0' : conf >= .65 ? '#ffb347' : '#ff5c5c';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="prod-name">${esc(item.name||'—')}</div><div class="prod-sub">${esc(item.brand||'')}${item.shelf_position?' · '+esc(item.shelf_position):''}</div></td>
+      <td class="barcode">${item.barcode ? esc(item.barcode) : '<span style="color:var(--text3)">—</span>'}</td>
+      <td><span class="qty-badge ${qtyClass}">${qty}</span></td>
+      <td><div class="conf"><div class="conf-track"><div class="conf-fill" style="width:${confPct}%;background:${confColor}"></div></div><span class="conf-pct">${confPct}%</span></div></td>
+      <td><span class="pill ${item.low_stock?'pill-low':'pill-ok'}">${item.low_stock?'↓':'✓'}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById('btn-new-scan').addEventListener('click', () => {
+  capturedBase64 = null;
+  document.getElementById('preview-img').style.display = 'none';
+  document.getElementById('video').style.display = 'block';
+  document.getElementById('analyze-section').style.display = 'none';
+  document.getElementById('cam-action-row').style.display = 'block';
+  document.getElementById('cam-overlay').style.display = 'flex';
+  document.getElementById('cam-controls').style.display = 'none';
+  hideError();
+  goScreen('camera', document.querySelector('[data-screen="camera"]'));
+});
+
+// ── EXPORT ────────────────────────────────────────────
+document.getElementById('btn-export-csv').addEventListener('click', () => {
+  if (!inventoryData) return;
+  const items = inventoryData.items || [];
+  const rows = [['Produto','Marca','Código de Barras','Quantidade','Posição','Confiança','Baixo Estoque']];
+  items.forEach(i => rows.push([i.name||'',i.brand||'',i.barcode||'',i.quantity||0,i.shelf_position||'',Math.round((i.confidence||0)*100)+'%',i.low_stock?'SIM':'NÃO']));
+  const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `inventario_${Date.now()}.csv`; a.click();
+});
+
+document.getElementById('btn-copy-json').addEventListener('click', () => {
+  if (!inventoryData) return;
+  navigator.clipboard.writeText(JSON.stringify(inventoryData, null, 2)).then(() => {
+    const btn = document.getElementById('btn-copy-json');
+    btn.textContent = 'Copiado ✓'; setTimeout(() => btn.textContent = 'Copiar JSON', 1500);
+  });
+});
+
+// ── HISTORY ───────────────────────────────────────────
+function saveHistory(data, pdvId) {
+  let hist = JSON.parse(localStorage.getItem('pdv_history') || '[]');
+  hist.unshift({ ts: new Date().toISOString(), pdv: pdvId || 'PDV', summary: data.summary, items: data.items.length });
+  hist = hist.slice(0, 30);
+  localStorage.setItem('pdv_history', JSON.stringify(hist));
+  renderHistory();
+}
+
+function renderHistory() {
+  const hist = JSON.parse(localStorage.getItem('pdv_history') || '[]');
+  const el = document.getElementById('history-list');
+  const clearBtn = document.getElementById('btn-clear-history');
+  if (!hist.length) {
+    el.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="width:40px;height:40px;opacity:.25"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhuma análise ainda.</p></div>';
+    clearBtn.style.display = 'none';
+    return;
+  }
+  clearBtn.style.display = 'flex';
+  el.innerHTML = hist.map(h => `
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:500">${esc(h.pdv)}</span>
+        <span style="font-size:10px;font-family:monospace;color:var(--text3)">${new Date(h.ts).toLocaleString('pt-BR')}</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:5px">
+        <span style="font-size:11px;color:var(--accent)">${h.summary?.total_products??h.items} produtos</span>
+        <span style="font-size:11px;color:var(--info)">${h.summary?.total_units??'?'} unidades</span>
+        ${(h.summary?.low_stock_count||0)>0?`<span style="font-size:11px;color:var(--warn)">${h.summary.low_stock_count} baixo estoque</span>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('btn-clear-history').addEventListener('click', () => {
+  if (confirm('Limpar todo o histórico?')) {
+    localStorage.removeItem('pdv_history');
+    renderHistory();
+  }
+});
+
+// ── SETTINGS ──────────────────────────────────────────
+function toggleKey() {
+  const inp = document.getElementById('api-key-input');
+  const btn = document.getElementById('key-toggle-btn');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? 'mostrar' : 'ocultar';
+}
+
+document.getElementById('btn-save-key').addEventListener('click', () => {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-')) {
+    document.getElementById('key-status').style.display = 'block';
+    document.getElementById('key-status').innerHTML = '<div class="alert alert-err">Chave inválida. Deve começar com sk-ant-...</div>';
+    return;
+  }
+  localStorage.setItem('anthropic_api_key', key);
+  document.getElementById('key-status').style.display = 'block';
+  document.getElementById('key-status').innerHTML = '<div class="alert alert-ok">✓ Chave salva com sucesso!</div>';
+  document.getElementById('key-badge').textContent = 'configurada';
+  document.getElementById('key-badge').className = 'badge-ok';
+  setTimeout(() => document.getElementById('key-status').style.display = 'none', 2000);
+});
+
+// ── INSTALL PWA ───────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  document.getElementById('btn-install').style.display = 'flex';
+});
+
+document.getElementById('btn-install').addEventListener('click', async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  const { outcome } = await deferredInstall.userChoice;
+  if (outcome === 'accepted') document.getElementById('btn-install').style.display = 'none';
+  deferredInstall = null;
+});
+
+// ── UTILS ─────────────────────────────────────────────
+function showError(msg) {
+  const el = document.getElementById('error-section');
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('error-section').style.display = 'none';
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── INIT ──────────────────────────────────────────────
+(function init() {
+  const key = localStorage.getItem('anthropic_api_key');
+  if (key) {
+    document.getElementById('api-key-input').value = key;
+    document.getElementById('key-badge').textContent = 'configurada';
+    document.getElementById('key-badge').className = 'badge-ok';
+  }
+  renderHistory();
+})();
+</script>
+</body>
+</html>
